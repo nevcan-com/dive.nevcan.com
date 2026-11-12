@@ -15,7 +15,7 @@ export interface UpcomingEvent {
 }
 
 export const upcoming: UpcomingEvent[] = [
-  // listed as active on GUE (given by Nev, 2026-11-11); end date not given yet
+  // listed as active on GUE (given by Nev, 2026-11-11); start date only, no end date needed (Nev)
   {
     title: 'ITC GUE Performance Diver',
     start: '2027-03-01',

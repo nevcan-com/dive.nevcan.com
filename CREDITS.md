@@ -21,7 +21,8 @@ public attribution (e.g. CC BY), it must be shown on the page where the asset is
   Explorers (GUE); GUE approved its use on this site, along with every other GUE image here
   (2026-11-12); photographer not named (possibly Andrei Voinigescu)
 - `public/media/about-reef-*.webp` (About banner, from `source-media/about-banner-reef_gue.jpg`):
-  credited to Global Underwater Explorers (Nev doesn't remember the photographer, 2026-11-11)
+  credited to Global Underwater Explorers (Nev doesn't remember the photographer, 2026-11-11).
+  `public/og-image.jpg` (share image for links, 1200×630) is a crop of the same photograph.
 - `public/media/nev-portrait-*.webp` (About page portrait, from
   `source-media/nev-portrait_akin-bagcilar.jpg`): photograph by Akın Bağcılar
 - `public/media/surface-overunder.webp` (homepage hero): photograph by Julian Mühlenhaus,

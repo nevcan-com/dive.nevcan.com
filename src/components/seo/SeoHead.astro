@@ -5,13 +5,15 @@ interface Props {
   title?: string;
   description?: string;
   locale?: Locale;
-  /** Absolute or root-relative OG image. Omitted until real imagery exists. */
+  /** Absolute or root-relative share image, 1200×630; defaults to the reef photo (public/og-image.jpg) */
   image?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const { title, description, locale = 'en', image, noindex = false, jsonLd } = Astro.props;
+/** Nev on a reef wall, torch on the soft corals (photo: Global Underwater Explorers) */
+const DEFAULT_IMAGE = '/og-image.jpg';
 const s = t(locale);
 const fullTitle = title ? `${title} · ${s.site.shortName}` : s.site.name;
 /** shared links: the homepage carries the full name */
@@ -21,7 +23,7 @@ const desc = description ?? s.site.description;
 // /about (and /)
 const path = Astro.url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '');
 const canonical = new URL(path || '/', Astro.site);
-const ogImage = image ? new URL(image, Astro.site).href : undefined;
+const ogImage = new URL(image ?? DEFAULT_IMAGE, Astro.site).href;
 ---
 
 <title>{fullTitle}</title>
@@ -36,10 +38,16 @@ const ogImage = image ? new URL(image, Astro.site).href : undefined;
 <meta property="og:description" content={desc} />
 <meta property="og:url" content={canonical.href} />
 <meta property="og:locale" content="en_US" />
-{ogImage && <meta property="og:image" content={ogImage} />}
-<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta
+  property="og:image:alt"
+  content="Nevcan Uludaş diving along a reef wall, his torch lighting red soft corals"
+/>
+<meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={shareTitle} />
 <meta name="twitter:description" content={desc} />
-{ogImage && <meta name="twitter:image" content={ogImage} />}
+<meta name="twitter:image" content={ogImage} />
 
 {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}

@@ -1,7 +1,6 @@
 ---
 /**
- * Floating footer card over the deep scene (inspired by the footer Nevcan liked on codeofsagar.in,
- * reinterpreted: the ghost mark is the NEV logo as a pane of glass cut into the card).
+ * Floating footer card over the deep scene (inspired by the footer Nevcan liked on codeofsagar.in).
  */
 import GueTvOffer from './GueTvOffer.astro';
 import { navItems } from '@/data/navigation';
@@ -25,39 +24,12 @@ const year = new Date().getFullYear();
 const SINCE = 1987;
 const TIME_ZONE = 'Europe/Istanbul';
 const EMAIL = 'nev@gue.com';
-// the strokes of src/assets/brand/nev.svg
-/** the glass NEV mark in the card; switched off for now to compare (Nev, 2026-11-11) */
-const SHOW_MARK = false;
-const MARK = 'M350 283 533 485V283M624 283h159M624 384h159M624 485h159M874 283v202l183-202';
-// the mark's filled shape (outer edge of the outline), as a CSS mask: the card's tinted
-// background is cut away there and a lighter pane of glass sits in the opening
-const MARK_FILL = `url("data:image/svg+xml,${encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='300 237 803 294'><path d='${MARK}' fill='none' stroke='#fff' stroke-width='43' stroke-linecap='round' stroke-linejoin='round'/><circle cx='353' cy='478' r='28.5' fill='#fff'/></svg>`,
-)}")`;
 ---
 
 <footer class="footer" id="contact" data-footer>
   <SocialLinks />
-  <div
-    class:list={['card', { compact: !full, 'no-mark': !SHOW_MARK }]}
-    style={`--mark: ${MARK_FILL}`}
-  >
+  <div class:list={['card', { compact: !full }]}>
     <div class="card-bg" aria-hidden="true"></div>
-    <div class="ghost-glass" aria-hidden="true"></div>
-    <!-- the NEV mark as a hollow outline: the stroke minus a slightly thinner copy of itself -->
-    <svg class="ghost" viewBox="300 237 803 294" aria-hidden="true" focusable="false">
-      <defs>
-        <mask id="ghost-mark" maskUnits="userSpaceOnUse" x="300" y="237" width="803" height="294">
-          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d={MARK} stroke="#fff" stroke-width="43" />
-            <path d={MARK} stroke="#000" stroke-width="40" />
-          </g>
-          <circle cx="353" cy="478" r="28.5" fill="#fff" />
-          <circle cx="353" cy="478" r="27" fill="#000" />
-        </mask>
-      </defs>
-      <rect x="300" y="237" width="803" height="294" fill="currentColor" mask="url(#ghost-mark)" />
-    </svg>
 
     {full && (
       <>
@@ -176,7 +148,7 @@ const MARK_FILL = `url("data:image/svg+xml,${encodeURIComponent(
 
   import { onFirstIntent } from '@/components/journey/intent';
 
-  // scroll-scrubbed entrance: the card rises, the ghost mark drifts up
+  // scroll-scrubbed entrance: the card rises
   const footer = document.querySelector<HTMLElement>('[data-footer]');
   if (footer && !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     onFirstIntent(() => {
@@ -196,8 +168,6 @@ const MARK_FILL = `url("data:image/svg+xml,${encodeURIComponent(
               scrollTrigger: st,
             },
           );
-          // the mark, its glass and the opening in the card move together through --lift
-          gsap.fromTo(card, { '--lift': 1 }, { '--lift': 0, ease: 'none', scrollTrigger: st });
           gsap.fromTo(
             footer.querySelectorAll('.headline, .contact, .col'),
             { y: 40, opacity: 0 },
@@ -238,96 +208,23 @@ const MARK_FILL = `url("data:image/svg+xml,${encodeURIComponent(
     border: 1px solid rgb(232 244 248 / 0.18);
     border-radius: 24px;
     box-shadow: 0 -30px 120px rgb(79 184 231 / 0.08);
-    /* the NEV mark: size, resting offset from the bottom, and the entrance lift (0 = at rest) */
-    --ghost-w: clamp(24.8rem, 9.5rem + 56.4vw, 72.1rem);
-    --ghost-b: calc(clamp(0rem, -0.5rem + 1.25vw, 1.25rem) - 25px);
-    --lift: 0;
-    --ghost-y: calc(var(--ghost-b) - var(--lift) * 0.35 * var(--ghost-w) * 294 / 803);
   }
-  /* the tinted, frosted card, with the mark cut out of it */
-  .card-bg,
-  .ghost-glass {
+  /* the tinted, frosted card */
+  .card-bg {
     position: absolute;
+    inset: 0;
     z-index: 0;
     pointer-events: none;
-    mask-repeat: no-repeat;
-    -webkit-mask-repeat: no-repeat;
-  }
-  .card-bg {
-    inset: 0;
     background: rgb(2 6 11 / 0.92);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    mask-image: var(--mark), linear-gradient(#000 0 0);
-    -webkit-mask-image: var(--mark), linear-gradient(#000 0 0);
-    mask-size:
-      var(--ghost-w) auto,
-      100% 100%;
-    -webkit-mask-size:
-      var(--ghost-w) auto,
-      100% 100%;
-    mask-position:
-      left 50% bottom var(--ghost-y),
-      0 0;
-    -webkit-mask-position:
-      left 50% bottom var(--ghost-y),
-      0 0;
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
   }
-  /* a pane of lighter glass in the opening: the deep scene shows through, softly */
-  .ghost-glass {
-    left: 0;
-    right: 0;
-    margin-inline: auto;
-    bottom: var(--ghost-y);
-    width: var(--ghost-w);
-    aspect-ratio: 803 / 294;
-    background:
-      linear-gradient(165deg, rgb(232 244 248 / 0.07), rgb(232 244 248 / 0.01) 55%),
-      rgb(2 6 11 / 0.6);
-    backdrop-filter: blur(8px) saturate(1.2);
-    -webkit-backdrop-filter: blur(8px) saturate(1.2);
-    mask-image: var(--mark);
-    -webkit-mask-image: var(--mark);
-    mask-size: 100% 100%;
-    -webkit-mask-size: 100% 100%;
-  }
-
-  /* centred, sitting a little above the bottom line (centred with margins, not a transform:
-     the entrance animation owns the transform) */
-  .ghost {
-    position: absolute;
-    left: 0;
-    right: 0;
-    margin-inline: auto;
-    /* low enough that the card's lower edge trims its foot */
-    bottom: var(--ghost-y);
-    z-index: 0;
-    width: var(--ghost-w);
-    height: auto;
-    /* the glass pane's rim */
-    color: rgb(232 244 248 / 0.18);
-    pointer-events: none;
-    user-select: none;
-  }
-  /* detail pages: no pitch, no dates; tighter all round, and a smaller mark */
+  /* detail pages: no pitch, no dates; tighter all round */
   .card.compact {
     gap: var(--space-6);
     padding-block: var(--space-7) var(--space-5);
   }
-  .no-mark .ghost,
-  .no-mark .ghost-glass {
-    display: none;
-  }
-  .no-mark .card-bg {
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-  .card.compact {
-    --ghost-w: clamp(15.7rem, 6.3rem + 28.2vw, 37.7rem);
-  }
-  .card > :not(.ghost, .card-bg, .ghost-glass) {
+  .card > :not(.card-bg) {
     position: relative;
     z-index: 1;
   }
