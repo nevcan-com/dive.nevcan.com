@@ -1,0 +1,76 @@
+---
+/**
+ * Booking page (draft): availability calendar plus the upcoming dates. Sample data throughout,
+ * so it stays noindex and out of the sitemap until it reads Nevcan's real calendar.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AvailabilityCalendar from '@/components/booking/AvailabilityCalendar.astro';
+import UpcomingEvents from '@/components/footer/UpcomingEvents.astro';
+import { upcoming } from '@/data/events';
+---
+
+<BaseLayout title="Booking" description="Plan a course or a dive with Nev." noindex>
+  <article class="page">
+    <header class="head">
+      <p class="eyebrow">Booking</p>
+      <h1>Let's plan a course or a dive</h1>
+      <p class="lede">
+        Pick a date that works for you, or write and we'll find one. Courses run in small groups;
+        every booking starts with a short conversation about your experience and goals.
+      </p>
+    </header>
+    <div class="grid">
+      <section class="panel lg lg-dark" aria-label="Availability">
+        <AvailabilityCalendar />
+      </section>
+      <section class="panel lg lg-dark" aria-label="Upcoming dates">
+        <UpcomingEvents events={upcoming} email="nev@gue.com" cta="email" />
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-8);
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 2rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 44rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--bio);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .lede {
+    font-size: var(--step-1);
+    color: rgb(232 244 248 / 0.85);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: var(--space-5);
+    align-items: start;
+  }
+  .panel {
+    padding: var(--space-6);
+    border-radius: 24px;
+  }
+</style>

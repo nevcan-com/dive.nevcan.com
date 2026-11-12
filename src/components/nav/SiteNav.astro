@@ -1,0 +1,429 @@
+---
+import { t } from '@/i18n';
+import { navItems } from '@/data/navigation';
+import NevLogo from '@/assets/brand/nev.svg';
+import LangSwitch from './LangSwitch.astro';
+
+const s = t();
+const links = navItems.filter((n) => n.key !== 'booking');
+const booking = navItems.find((n) => n.key === 'booking')!;
+---
+
+<header class="site-header">
+  <div class="capsule lg">
+    <a class="brand" href="/">
+      <NevLogo class="brand-mark" aria-hidden="true" />
+      <span class="brand-tag" aria-hidden="true">
+        dive
+      </span>
+      <span class="visually-hidden">Nev, diving: home</span>
+    </a>
+
+    <nav aria-label={s.a11y.mainNav} class="nav">
+      <ul id="site-menu" class="menu">
+        <li class="hover-pill" aria-hidden="true"></li>
+        {links.map((item) => (
+          <li>
+            <a href={item.href} data-nav={item.key}>
+              {s.nav[item.key]}
+            </a>
+          </li>
+        ))}
+        <li class="menu-booking">
+          <a href={booking.href}>{s.nav.booking}</a>
+        </li>
+        <li class="menu-lang">
+          <LangSwitch variant="sheet" />
+        </li>
+      </ul>
+    </nav>
+
+    <div class="bar-lang">
+      <LangSwitch />
+    </div>
+
+    <a class="book lg lg-tint lg-press" href={booking.href}>
+      {s.nav.booking}
+    </a>
+
+    <button
+      class="menu-toggle lg lg-press"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      data-open-label={s.a11y.openMenu}
+      data-close-label={s.a11y.closeMenu}
+    >
+      <span class="visually-hidden">{s.a11y.openMenu}</span>
+      <span class="bars" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <!-- wide screens: the language switch sits above the depth rail, level with the capsule -->
+  <div class="rail-lang">
+    <LangSwitch variant="rail" />
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const menu = document.getElementById('site-menu');
+  if (toggle && menu) {
+    const label = toggle.querySelector('.visually-hidden')!;
+    const set = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      menu.dataset.open = String(open);
+      label.textContent = (open ? toggle.dataset.closeLabel : toggle.dataset.openLabel) ?? '';
+    };
+    toggle.addEventListener('click', () => set(toggle.getAttribute('aria-expanded') !== 'true'));
+    menu.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) set(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        set(false);
+        toggle.focus();
+      }
+    });
+
+    // a soft highlight that glides between links (desktop)
+    const pill = menu.querySelector<HTMLElement>('.hover-pill');
+    const move = (a: HTMLElement | null) => {
+      if (!pill) return;
+      if (!a) {
+        pill.style.opacity = '0';
+        return;
+      }
+      const m = menu.getBoundingClientRect();
+      const r = a.getBoundingClientRect();
+      pill.style.opacity = '1';
+      pill.style.width = `${r.width}px`;
+      pill.style.transform = `translateX(${r.left - m.left}px)`;
+    };
+    menu.querySelectorAll<HTMLElement>('[data-nav]').forEach((a) => {
+      a.addEventListener('pointerenter', () => move(a));
+      a.addEventListener('focus', () => move(a));
+      a.addEventListener('blur', () => move(links.get(current()) ?? null));
+    });
+
+    // at rest the pill marks where you are: the current chapter, or Contact once the footer is in view
+    const links = new Map(
+      Array.from(menu.querySelectorAll<HTMLElement>('[data-nav]')).map((a) => [a.dataset.nav!, a]),
+    );
+    let chapter = '';
+    let inFooter = false;
+    let hovering = false;
+    const current = () => (inFooter ? 'contact' : chapter);
+    const sync = () => {
+      const key = current();
+      links.forEach((a, k) => {
+        if (k === key) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      });
+      if (!hovering) move(links.get(key) ?? null);
+    };
+    window.addEventListener('divedepth', (e) => {
+      if (e.detail.section !== chapter) {
+        chapter = e.detail.section;
+        sync();
+      }
+    });
+    const footer = document.getElementById('contact');
+    if (footer) {
+      new IntersectionObserver(
+        ([entry]) => {
+          inFooter = !!entry?.isIntersecting;
+          sync();
+        },
+        { threshold: 0.35 },
+      ).observe(footer);
+    }
+    menu.addEventListener('pointerenter', () => (hovering = true));
+    menu.addEventListener('pointerleave', () => {
+      hovering = false;
+      move(links.get(current()) ?? null);
+    });
+    window.addEventListener('resize', () => move(links.get(current()) ?? null));
+  }
+</script>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: var(--space-3) 0 auto 0;
+    z-index: var(--z-nav);
+    display: flex;
+    justify-content: center;
+    padding-inline: var(--gutter);
+    pointer-events: none;
+  }
+  @media (min-width: 900px) {
+    .site-header {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  .capsule {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    width: min(100%, var(--content-max));
+    height: 54px;
+    padding: 0 6px 0 20px;
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    transition: color var(--dur-base) var(--ease-out);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    margin-right: auto;
+  }
+  .brand-mark {
+    display: block;
+    width: auto;
+    height: 1.3rem;
+  }
+  .brand-tag {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--bio);
+  }
+
+  .menu {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .menu a {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: var(--radius-pill);
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    color: inherit;
+    opacity: 0.86;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .menu a:hover,
+  .menu a:focus-visible,
+  .menu a[aria-current] {
+    opacity: 1;
+  }
+  .menu a[aria-current] {
+    font-weight: 500;
+  }
+  .menu a:focus-visible {
+    outline-offset: -2px;
+  }
+  /* not a backdrop: nested backdrop-filters inside the capsule render poorly */
+  .hover-pill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.09);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 420ms var(--ease-out),
+      width 420ms var(--ease-out),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+  .menu-booking,
+  .menu-lang {
+    display: none;
+  }
+
+  .book {
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    font-size: var(--step--1);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    /* the accent, always (the logo's dot and the depth droplet share it) */
+    --lg-rgb: 111 247 224;
+    --lg-alpha: 0.92;
+    color: var(--ink-surface);
+  }
+  .book:hover {
+    --lg-alpha: 1;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+
+  .rail-lang {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    /* level with the capsule; its right edge lines up with the depth rail's (DepthGauge) */
+    .rail-lang {
+      position: fixed;
+      /* the capsule is 54px tall from var(--space-3); this 36px switch shares its centre line */
+      top: calc(var(--space-3) + 9px);
+      right: var(--space-5);
+      display: block;
+      pointer-events: auto;
+    }
+    .bar-lang {
+      display: none;
+    }
+  }
+
+  /* above the waterline the capsule floats over bright sky */
+  :global(html.above-water) .capsule {
+    color: var(--ink-surface);
+    --lg-rgb: 255 255 255;
+    --lg-alpha: 0.28;
+  }
+  :global(html.above-water) .hover-pill {
+    background: rgb(255 255 255 / 0.45);
+  }
+  :global(html.above-water) .rail-lang :global(.lang) {
+    color: var(--ink-surface);
+    --lg-rgb: 255 255 255;
+    --lg-alpha: 0.28;
+  }
+
+  @media (max-width: 860px) {
+    .capsule {
+      height: 52px;
+      padding: 0 5px 0 18px;
+    }
+    /* phones keep Booking in reach: a smaller pill beside the menu button */
+    .book {
+      margin-left: auto;
+      padding: 8px 15px;
+      font-size: 0.8rem;
+    }
+    .menu-toggle {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      color: inherit;
+      cursor: pointer;
+    }
+    .bars,
+    .bars::before,
+    .bars::after {
+      display: block;
+      width: 18px;
+      height: 1.5px;
+      border-radius: 1px;
+      background: currentColor;
+      transition: transform var(--dur-base) var(--ease-out);
+    }
+    .bars {
+      position: relative;
+    }
+    .bars::before,
+    .bars::after {
+      content: '';
+      position: absolute;
+      left: 0;
+    }
+    .bars::before {
+      top: -6px;
+    }
+    .bars::after {
+      top: 6px;
+    }
+    .menu-toggle[aria-expanded='true'] .bars {
+      background: transparent;
+    }
+    .menu-toggle[aria-expanded='true'] .bars::before {
+      transform: translateY(6px) rotate(45deg);
+    }
+    .menu-toggle[aria-expanded='true'] .bars::after {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* the menu drops out of the capsule as its own sheet of glass */
+    .nav {
+      position: absolute;
+      inset: calc(100% + 10px) 0 auto 0;
+    }
+    .menu {
+      flex-direction: column;
+      gap: 0;
+      padding: var(--space-3);
+      border-radius: 26px;
+      color: var(--ink);
+      /* nested inside the capsule's backdrop root, so it can't blur the page: keep it dense */
+      background: rgb(6 16 26 / 0.9);
+      box-shadow:
+        inset 0 1px 0.5px rgb(255 255 255 / 0.4),
+        inset 0 0 0 0.5px rgb(255 255 255 / 0.16),
+        0 20px 50px -12px rgb(0 0 0 / 0.5);
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+      transform-origin: top center;
+      transition:
+        opacity var(--dur-base) var(--ease-out),
+        transform var(--dur-base) var(--ease-out),
+        visibility 0s linear var(--dur-base);
+    }
+    .menu[data-open='true'] {
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity var(--dur-base) var(--ease-out),
+        transform var(--dur-base) var(--ease-out);
+    }
+    .menu a {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+      font-family: var(--font-display);
+      font-size: var(--step-3);
+      letter-spacing: 0;
+      opacity: 1;
+    }
+    .menu-booking,
+    .menu-lang {
+      display: block;
+    }
+    .bar-lang {
+      display: none;
+    }
+    .menu-booking a {
+      color: var(--bio);
+    }
+    .menu a[aria-current] {
+      color: var(--bio);
+    }
+    .menu a[aria-current]::after {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-left: 0.5em;
+      vertical-align: middle;
+      border-radius: 50%;
+      background: var(--bio);
+      box-shadow: 0 0 10px var(--bio);
+    }
+    .hover-pill {
+      display: none;
+    }
+  }
+</style>

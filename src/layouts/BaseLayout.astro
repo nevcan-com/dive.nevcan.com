@@ -1,0 +1,61 @@
+---
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@/styles/global.css';
+
+import serifLatin from '@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url';
+import serifLatinExt from '@fontsource/instrument-serif/files/instrument-serif-latin-ext-400-normal.woff2?url';
+import SeoHead from '@/components/seo/SeoHead.astro';
+import SiteNav from '@/components/nav/SiteNav.astro';
+import SiteFooter from '@/components/footer/SiteFooter.astro';
+import LiquidGlass from '@/components/glass/LiquidGlass.astro';
+import AnchorCenter from '@/components/nav/AnchorCenter.astro';
+import CookieConsent from '@/components/consent/CookieConsent.astro';
+import { analyticsOn } from '@/data/analytics';
+import { t } from '@/i18n';
+
+type SeoProps = Parameters<typeof SeoHead>[0];
+interface Props extends SeoProps {
+  /** design previews only: sample events for the footer's upcoming column */
+  previewEvents?: import('@/data/events').UpcomingEvent[];
+  /** the homepage's full footer; every other page gets the compact one */
+  fullFooter?: boolean;
+}
+
+const { previewEvents, fullFooter = false, ...props } = Astro.props;
+const locale = props.locale ?? 'en';
+const s = t(locale);
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#01050a" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={serifLatinExt} as="font" type="font/woff2" crossorigin />
+    <SeoHead {...props} />
+    <slot name="head" />
+  </head>
+  <body>
+    <LiquidGlass />
+    <AnchorCenter />
+    <a class="skip-link" href="#main">
+      {s.a11y.skipToContent}
+    </a>
+    {analyticsOn && <CookieConsent />}
+    <SiteNav />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter previewEvents={previewEvents} full={fullFooter} />
+    <slot name="after-main" />
+  </body>
+</html>

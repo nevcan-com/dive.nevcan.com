@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#01050a"/>
+  <!-- the logo's first letter only: the N (its foot is the accent dot) -->
+  <g transform="translate(32 32) scale(0.155) translate(-440 -384)">
+    <path d="M350 283 533 485V283" fill="none" stroke="#ffffff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="353" cy="478" r="34" fill="#6FF7E0"/>
+  </g>
+</svg>

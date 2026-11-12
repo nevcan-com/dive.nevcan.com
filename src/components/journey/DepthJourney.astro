@@ -1,0 +1,236 @@
+---
+import { journey } from '@/data/journey';
+import JourneySection from './JourneySection.astro';
+import Interlude from './transitions/Interlude.astro';
+import DepthGauge from './DepthGauge.astro';
+import ClipCredit from './ClipCredit.astro';
+import StaticFallback from './StaticFallback.astro';
+import { SPAN } from './cinematics';
+
+interface Props {
+  /** the opening's over-under photo (its sky is transparent: the drawn sky shows through) */
+  heroPhoto?: string;
+  heroPhotoFrom?: number;
+  heroPhotoExit?: 'pan' | 'scroll';
+}
+const { heroPhoto, heroPhotoFrom, heroPhotoExit } = Astro.props;
+---
+
+<div class="journey" data-journey>
+  <div class="scene" data-scene aria-hidden="true"></div>
+  <StaticFallback />
+  <div class="sections">
+    {journey.map((section, index) => (
+      <>
+        {section.transition && section.transition !== 'breach' && <Interlude to={section} />}
+        <JourneySection
+          section={section}
+          index={index}
+          heroPhoto={heroPhoto}
+          heroPhotoFrom={heroPhotoFrom}
+          heroPhotoExit={heroPhotoExit}
+        />
+        {section.outro && (
+          <>
+            <Interlude after={section} />
+            {/* the outro ends here: from this point on the depth runs through the footer */}
+            <div
+              class="outro-end"
+              data-depth-start={section.depthEnd + SPAN[section.outro]}
+              data-chapter="contact"
+              aria-hidden="true"
+            />
+          </>
+        )}
+      </>
+    ))}
+  </div>
+</div>
+<DepthGauge />
+<ClipCredit />
+
+<script>
+  import { startDepthTracker, startPointer } from './tracker';
+  import { canRunScene } from './capability';
+  import { onFirstIntent } from './intent';
+  import { startAutoplay } from './autoplay';
+  import { startWaterlineClip } from './waterline';
+
+  const root = document.querySelector<HTMLElement>('[data-journey]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (root) {
+    startDepthTracker(root);
+    startPointer();
+    // the opening copy disappears behind the rising water instead of fading
+    startWaterlineClip(root);
+    // transitions play on a fixed clock instead of following the wheel (not with reduced motion)
+    if (!reduced) startAutoplay(root);
+
+    // gentle reveal for chapter content
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-visible');
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -15% 0px' },
+    );
+    root.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    // scroll-scrubbed DOM side of the transitions (the WebGL side is driven by depth)
+    if (!reduced)
+      onFirstIntent(() => {
+        Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+          ([{ gsap }, { ScrollTrigger }]) => {
+            gsap.registerPlugin(ScrollTrigger);
+            // chapters render lazily (content-visibility) and media/fonts settle late, so trigger
+            // positions are re-measured when the layout changes, but only once scrolling has
+            // stopped: refresh() restores the scroll position and would cut a smooth scroll short
+            let refreshTimer = 0;
+            let layoutDirty = false;
+            const scheduleRefresh = () => {
+              clearTimeout(refreshTimer);
+              refreshTimer = window.setTimeout(() => {
+                if (!layoutDirty) return;
+                layoutDirty = false;
+                ScrollTrigger.refresh();
+              }, 300);
+            };
+            new ResizeObserver(() => {
+              layoutDirty = true;
+              scheduleRefresh();
+            }).observe(root);
+            window.addEventListener('scroll', () => layoutDirty && scheduleRefresh(), {
+              passive: true,
+            });
+            const scrub = (el: Element) => ({
+              trigger: el,
+              start: 'top top',
+              end: 'bottom bottom',
+              // the page scrolls itself through interludes at an even pace (autoplay.ts),
+              // so only a light smoothing is needed
+              scrub: 0.15,
+            });
+
+            root.querySelectorAll('.interlude-card').forEach((el) => {
+              const top = el.querySelector('.bar-top');
+              const bottom = el.querySelector('.bar-bottom');
+              // bars glide in from beyond the frame and glide back out, on a soft sine curve
+              // (y: 0 discards the CSS parking offset, which GSAP would otherwise add to yPercent)
+              const bar = { duration: 0.3, ease: 'sine.inOut' };
+              gsap
+                .timeline({
+                  scrollTrigger: scrub(el),
+                  defaults: { ease: 'power2.inOut' },
+                })
+                .fromTo(top, { y: 0, yPercent: -101 }, { y: 0, yPercent: 0, ...bar }, 0)
+                .fromTo(bottom, { y: 0, yPercent: 101 }, { y: 0, yPercent: 0, ...bar }, 0)
+                // the card (and its soft backing glow) only exists while its title does
+                .fromTo(
+                  el.querySelector('.card'),
+                  { opacity: 0 },
+                  { opacity: 1, duration: 0.1 },
+                  0.14,
+                )
+                .fromTo(
+                  el.querySelectorAll('.ch'),
+                  { yPercent: 115, opacity: 0 },
+                  { yPercent: 0, opacity: 1, duration: 0.22, stagger: 0.018, ease: 'power3.out' },
+                  0.16,
+                )
+                .fromTo(
+                  el.querySelectorAll('.card-meta'),
+                  { opacity: 0, y: 14 },
+                  { opacity: 1, y: 0, duration: 0.14 },
+                  0.26,
+                )
+                .to(el.querySelector('.card'), { opacity: 0, scale: 1.06, duration: 0.14 }, 0.56)
+                // fully open before the sticky stage releases, so no strip of the next chapter peeks in
+                .to(top, { yPercent: -101, ...bar }, 0.6)
+                .to(bottom, { yPercent: 101, ...bar }, 0.6);
+            });
+
+            root.querySelectorAll('.interlude-torch').forEach((el) => {
+              // timings line up with cinematics.ts (dark 0–0.35, flicker 0.5–0.66) and with the
+              // outro jellies in Jellyfish.tsx (around line 1, gone by 0.5)
+              const l1 = el.querySelector('.line-1');
+              const l2 = el.querySelector('.line-2');
+              gsap
+                .timeline({ scrollTrigger: scrub(el) })
+                .fromTo(l1, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.1 }, 0.12)
+                // once the jellies have gone, line 1 slides up and out, line 2 rises in behind it
+                .to(l1, { opacity: 0, yPercent: -120, duration: 0.12, ease: 'power2.in' }, 0.5)
+                .fromTo(
+                  l2,
+                  { opacity: 0, yPercent: 120, filter: 'blur(6px)' },
+                  {
+                    opacity: 1,
+                    yPercent: 0,
+                    filter: 'blur(0px)',
+                    duration: 0.14,
+                    ease: 'power2.out',
+                  },
+                  0.6,
+                )
+                .to(el.querySelector('.line-2'), { opacity: 0, duration: 0.08 }, 0.92);
+            });
+          },
+        );
+      });
+
+    const mountEl = root.querySelector<HTMLElement>('[data-scene]');
+    if (mountEl) {
+      let started = false;
+      const start = () => {
+        if (started) return;
+        started = true;
+        // the capability probe creates a WebGL context, which is costly where WebGL is emulated
+        // in software (lab tests such as PageSpeed): it runs only when the scene would start,
+        // never during the first paint
+        if (!canRunScene()) return;
+        import('./scene/mount')
+          .then(({ mountScene }) =>
+            mountScene(mountEl, () => document.documentElement.classList.add('scene-active')),
+          )
+          .catch((err) => console.warn('[journey] scene unavailable, using static fallback', err));
+      };
+      // The CSS atmosphere is the first paint everywhere; WebGL never competes with it.
+      // Small screens wait for intent (first scroll/touch); larger ones load when the main thread is idle.
+      if (window.matchMedia('(max-width: 760px)').matches) {
+        const opts = { once: true, passive: true } as const;
+        ['scroll', 'touchstart', 'pointerdown', 'keydown'].forEach((ev) =>
+          window.addEventListener(ev, start, opts),
+        );
+      } else {
+        const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1200));
+        const onLoad = () => idle(start, { timeout: 2500 });
+        if (document.readyState === 'complete') onLoad();
+        else window.addEventListener('load', onLoad, { once: true });
+      }
+    }
+  }
+</script>
+
+<style>
+  .journey {
+    position: relative;
+  }
+  .scene {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-scene);
+    opacity: 0;
+    transition: opacity 1.2s var(--ease-out);
+  }
+  :global(.scene-active) .scene {
+    opacity: 1;
+  }
+  /* no z-index here: section backdrops (z0), atmosphere (z1) and content (z2) share one stacking context */
+  .sections {
+    position: relative;
+  }
+</style>

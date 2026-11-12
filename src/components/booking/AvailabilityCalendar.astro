@@ -1,0 +1,357 @@
+---
+/**
+ * PREVIEW ONLY (/preview/booking): the availability calendar for the booking page.
+ * Availability below is made-up sample data, generated from today's date; the real version
+ * will read Nevcan's calendar.
+ */
+const EMAIL = 'nev@gue.com';
+const DAY = 86_400_000;
+type Status = 'past' | 'open' | 'few' | 'full';
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+// sample data: a few multi-day courses booked out, weekends nearly full, some single days taken
+function status(d: Date): Status {
+  if (d < today) return 'past';
+  const day = d.getDate();
+  const dow = d.getDay();
+  const courses = [
+    [3, 6],
+    [12, 15],
+    [24, 27],
+  ];
+  if (courses.some(([a, b]) => day >= a! && day <= b!)) return 'full';
+  if (day % 9 === 0) return 'full';
+  if (dow === 0 || dow === 6) return 'few';
+  return 'open';
+}
+
+const months = [0, 1].map((offset) => {
+  const first = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // weeks start on Monday
+  return {
+    title: first.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+    lead,
+    days: Array.from({ length: days }, (_, i) => {
+      const d = new Date(first.getFullYear(), first.getMonth(), i + 1);
+      return {
+        n: i + 1,
+        iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`,
+        label: d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
+        status: status(d),
+        today: d.getTime() === today.getTime(),
+      };
+    }),
+  };
+});
+
+let next: Date | null = null;
+for (let t = today.getTime(); t < today.getTime() + 62 * DAY; t += DAY) {
+  if (status(new Date(t)) === 'open') {
+    next = new Date(t);
+    break;
+  }
+}
+const nextLabel = next?.toLocaleDateString('en-GB', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+});
+const STATUS_TEXT: Record<Status, string> = {
+  past: 'past',
+  open: 'available',
+  few: 'few spots left',
+  full: 'fully booked',
+};
+---
+
+<div class="booking" data-booking data-email={EMAIL}>
+  <div class="head">
+    <p class="label">Availability</p>
+    <span class="sample">Sample data</span>
+  </div>
+  <p class="next">
+    <span class="dot" aria-hidden="true"></span>
+    Next open: <strong>{nextLabel}</strong>
+  </p>
+
+  {months.map((m, mi) => (
+    <div class="month" data-month={mi} hidden={mi !== 0}>
+      <div class="month-head">
+        <p class="month-title">{m.title}</p>
+        <div class="month-nav">
+          <button type="button" data-step="-1" disabled={mi === 0} aria-label="Previous month">
+            ‹
+          </button>
+          <button type="button" data-step="1" disabled={mi === 1} aria-label="Next month">
+            ›
+          </button>
+        </div>
+      </div>
+      <div class="grid" role="grid" aria-label={m.title}>
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w) => (
+          <span class="wd" aria-hidden="true">
+            {w}
+          </span>
+        ))}
+        {Array.from({ length: m.lead }, () => (
+          <span />
+        ))}
+        {m.days.map((d) => (
+          <button
+            type="button"
+            class:list={['day', `is-${d.status}`, { 'is-today': d.today }]}
+            data-date={d.iso}
+            data-label={d.label}
+            disabled={d.status === 'past' || d.status === 'full'}
+            aria-label={`${d.label}, ${STATUS_TEXT[d.status]}`}
+          >
+            {d.n}
+          </button>
+        ))}
+      </div>
+    </div>
+  ))}
+
+  <ul class="legend" aria-hidden="true">
+    <li>
+      <span class="key is-open"></span>Open
+    </li>
+    <li>
+      <span class="key is-few"></span>Few spots
+    </li>
+    <li>
+      <span class="key is-full"></span>Booked
+    </li>
+  </ul>
+
+  <a
+    class="request lg lg-tint lg-press"
+    href={`mailto:${EMAIL}?subject=Booking%20request`}
+    data-request
+  >
+    Pick a date →
+  </a>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-booking]').forEach((root) => {
+    const months = Array.from(root.querySelectorAll<HTMLElement>('[data-month]'));
+    let current = 0;
+    root.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+      b.addEventListener('click', () => {
+        months[current]!.hidden = true;
+        current = Math.max(0, Math.min(months.length - 1, current + Number(b.dataset.step)));
+        months[current]!.hidden = false;
+      }),
+    );
+    const request = root.querySelector<HTMLAnchorElement>('[data-request]')!;
+    const email = root.dataset.email;
+    root.querySelectorAll<HTMLButtonElement>('.day').forEach((day) =>
+      day.addEventListener('click', () => {
+        root
+          .querySelectorAll('.day[aria-pressed]')
+          .forEach((d) => d.removeAttribute('aria-pressed'));
+        day.setAttribute('aria-pressed', 'true');
+        const label = day.dataset.label!;
+        request.textContent = `Request ${label} →`;
+        request.href = `mailto:${email}?subject=${encodeURIComponent(`Booking request: ${label}`)}`;
+      }),
+    );
+  });
+</script>
+
+<style>
+  .booking {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 26rem;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .sample {
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffc46b;
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.35);
+  }
+  .next {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--step--1);
+  }
+  .next strong {
+    font-weight: 500;
+    color: var(--bio);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bio);
+    box-shadow: 0 0 10px var(--bio);
+  }
+
+  .month-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+  .month-title {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+  }
+  .month-nav {
+    display: flex;
+    gap: 4px;
+  }
+  .month-nav button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.06);
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .month-nav button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .wd {
+    padding-bottom: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-align: center;
+    color: var(--ink-muted);
+  }
+  .day {
+    position: relative;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .day.is-open {
+    box-shadow: inset 0 0 0 1px rgb(111 247 224 / 0.45);
+  }
+  .day.is-few {
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.45);
+  }
+  .day.is-few::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: #ffc46b;
+  }
+  .day.is-full {
+    color: rgb(232 244 248 / 0.28);
+    text-decoration: line-through;
+    cursor: not-allowed;
+    background: rgb(255 255 255 / 0.03);
+  }
+  .day.is-past {
+    color: rgb(232 244 248 / 0.18);
+    cursor: default;
+  }
+  .day.is-today {
+    font-weight: 700;
+  }
+  .day:not(:disabled):hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+  .day[aria-pressed='true'],
+  .day[aria-pressed='true']:hover {
+    background: var(--bio);
+    color: #02131a;
+    box-shadow: none;
+  }
+  .day[aria-pressed='true']::after {
+    background: #02131a;
+  }
+  .day:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 1px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+  }
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .key {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+  .key.is-open {
+    box-shadow: inset 0 0 0 1px rgb(111 247 224 / 0.7);
+  }
+  .key.is-few {
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.7);
+  }
+  .key.is-full {
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  .request {
+    justify-self: start;
+    margin-top: var(--space-1);
+    padding: 0.7rem 1.2rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+    color: #fff;
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+/**
+ * In-page links land with their chapter vertically centred (a chapter's content is centred in
+ * its band, so centring the band centres the content, including its button).
+ * Uses the band's box, which stays accurate even while content-visibility skips its contents.
+ */
+---
+
+<script>
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function targetY(id: string): number | null {
+    if (id === 'main' || id === 'surface') return 0;
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (el.closest('footer')) return max;
+    const band = el.closest<HTMLElement>('.band') ?? el;
+    const r = band.getBoundingClientRect();
+    let y = scrollY + r.top + r.height / 2 - innerHeight / 2;
+    // content taller than the screen: start it just below the nav instead of centring it
+    const inner = band.querySelector<HTMLElement>('.band-inner');
+    const nav = document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 0;
+    if (inner && inner.offsetHeight > innerHeight - nav - 24) {
+      y = scrollY + inner.getBoundingClientRect().top - nav - 32;
+    }
+    return Math.max(0, Math.min(max, y));
+  }
+
+  // Layout can still shift while we travel (chapters render lazily), and a smooth scroll can be
+  // interrupted, so when the scroll settles we re-aim and continue until we're there.
+  let journey = 0;
+  function go(id: string, smooth: boolean, attempt = 0) {
+    const y = targetY(id);
+    if (y === null) return false;
+    const behavior: ScrollBehavior = smooth && !reduced() ? 'smooth' : 'auto';
+    const run = ++journey;
+    window.scrollTo({ top: y, behavior });
+    if (attempt < 4) {
+      const check = () => {
+        if (run !== journey) return;
+        const again = targetY(id);
+        if (again !== null && Math.abs(scrollY - again) > 6) go(id, smooth, attempt + 1);
+      };
+      if ('onscrollend' in window) window.addEventListener('scrollend', check, { once: true });
+      else setTimeout(check, 1400);
+    }
+    return true;
+  }
+  // a manual scroll cancels any pending re-aim
+  window.addEventListener('wheel', () => journey++, { passive: true });
+  window.addEventListener('touchstart', () => journey++, { passive: true });
+
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const a = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[href*="#"]');
+    if (!a) return;
+    const url = new URL(a.href, location.href);
+    if (url.pathname !== location.pathname || !url.hash) return;
+    const id = decodeURIComponent(url.hash.slice(1));
+    if (go(id, true)) {
+      e.preventDefault();
+      history.pushState(null, '', `#${id}`);
+    }
+  });
+
+  // deep links (/#education) also land centred
+  if (location.hash) {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const land = () => requestAnimationFrame(() => go(id, false));
+    if (document.readyState === 'complete') land();
+    else window.addEventListener('load', land, { once: true });
+  }
+</script>

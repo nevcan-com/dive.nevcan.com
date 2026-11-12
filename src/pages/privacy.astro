@@ -1,0 +1,280 @@
+---
+/**
+ * Privacy & cookies notice.
+ * Two states, switched by `analyticsOn` (src/data/analytics.ts): today's "no cookies" text, and
+ * the Google Analytics text, which goes live together with GA4 and the consent banner. Update it whenever embeds, forms or the
+ * Dive Log (localStorage) are added.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { ANALYTICS, analyticsOn } from '@/data/analytics';
+
+const updated = '12 November 2026';
+const email = 'nev@gue.com';
+/** a visible placeholder in `astro dev` while analytics.ts has no transfer basis */
+const transferBasis = ANALYTICS.transferBasis ?? '[transfer basis]';
+---
+
+<BaseLayout
+  title="Privacy & cookies"
+  description={
+    analyticsOn
+      ? 'How dive.nevcan.com handles personal data and cookies: Google Analytics only with your consent, no advertising.'
+      : 'How dive.nevcan.com handles personal data and cookies: no cookies, no analytics, no tracking.'
+  }
+>
+  <article class="doc">
+    <header class="head">
+      <p class="eyebrow">Legal</p>
+      <h1>Privacy &amp; cookies</h1>
+      <p class="meta">Last updated {updated}</p>
+    </header>
+
+    <section class="card lg lg-dark">
+      <h2>In short</h2>
+      {analyticsOn ? (
+        <>
+          <ul class="facts">
+            <li>
+              <strong>Cookies only with your consent.</strong> Analytics cookies are set only if you
+              accept them.
+            </li>
+            <li>
+              <strong>Analytics, not advertising.</strong> Google Analytics shows which pages are
+              visited. No advertising pixels or advertising features, and Analytics data isn't
+              shared with Google for its own purposes.
+            </li>
+            <li>
+              <strong>Your choice is remembered.</strong> Your cookie choice is stored in your
+              browser.
+            </li>
+            <li>
+              <strong>Served from this site.</strong> Fonts, images and videos are served by this
+              site's host, GitHub Pages (no third-party fonts or embeds); Google Analytics loads
+              from Google only after you accept.
+            </li>
+          </ul>
+          <p>
+            You are asked before any analytics cookie is set, and you can change your choice at any
+            time under "Cookie settings" in the footer.
+          </p>
+        </>
+      ) : (
+        <>
+          <ul class="facts">
+            <li>
+              <strong>No cookies.</strong> This website does not set any cookies.
+            </li>
+            <li>
+              <strong>No tracking.</strong> No analytics, advertising pixels or third-party
+              trackers.
+            </li>
+            <li>
+              <strong>Nothing stored in your browser.</strong> No local storage or similar
+              technologies.
+            </li>
+            <li>
+              <strong>No third-party requests.</strong> Fonts, images and videos are served from
+              this site.
+            </li>
+          </ul>
+          <p>Because no non-essential cookies are used, you are not asked for cookie consent.</p>
+        </>
+      )}
+    </section>
+
+    <section>
+      <h2>Who is responsible</h2>
+      <p>
+        Nevcan Uludaş is the data controller for this website under the Turkish Personal Data
+        Protection Law (KVKK, Law No. 6698) and, where applicable, the EU General Data Protection
+        Regulation (GDPR). Contact: <a href={`mailto:${email}`}>{email}</a>.
+      </p>
+    </section>
+
+    <section>
+      <h2>What is processed when you visit</h2>
+      <p>
+        This site is hosted on GitHub Pages, a service of GitHub, Inc. (US). To deliver pages,
+        GitHub's servers, also outside Türkiye including in the US, process standard technical data
+        such as your IP address, browser type, the page requested and the time of the request.
+        GitHub logs visitors' IP addresses for security purposes (
+        <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#data-collection">
+          GitHub Pages: data collection
+        </a>
+        ). This is needed to operate and secure the website and is not used to identify or profile
+        you.
+      </p>
+      <p>
+        Legal basis: my legitimate interest in running a secure website (KVKK Art. 5(2)(f); GDPR
+        Art. 6(1)(f)). This is a transfer abroad. GitHub does not offer a standard contract approved
+        by the Personal Data Protection Board, so none is in place.
+      </p>
+    </section>
+
+    <section>
+      <h2>When you contact us</h2>
+      <p>
+        If you email <a href={`mailto:${email}`}>{email}</a>, your message and contact details are
+        used only to reply to you and to handle your request, and are kept no longer than needed for
+        that purpose.
+      </p>
+      <p>
+        Online booking is not available yet. When booking and inquiry forms are added, they will
+        come with their own privacy notice explaining what is collected and why.
+      </p>
+    </section>
+
+    <section>
+      <h2>Links to GUE.tv</h2>
+      <p>
+        The GUE.tv links on this site, in the footer and on the About page, are affiliate links. New
+        members who join through them can use code AFF30M for 30% off the first month or AFF20A for
+        20% off the first year, and GUE.tv pays Nevcan Uludaş a small referral fee. It costs you
+        nothing extra. This site sets no cookie for this; GUE.tv sets its own referral cookie on
+        gue.tv, covered by GUE.tv's privacy policy.
+      </p>
+    </section>
+
+    {analyticsOn ? (
+      <section id="analytics">
+        <h2>Analytics</h2>
+        <p>
+          With your consent (KVKK Art. 5(1); GDPR Art. 6(1)(a)), this site uses Google Analytics 4
+          to see which pages are visited and how. The data is collected automatically by a script
+          and cookies, only after you accept. Google processes the pages viewed, device and browser
+          type and an approximate location derived from your IP address. For visitors in the EU,
+          Google says it does not log or store IP addresses. Its cookies (dive_ga, dive_ga_…) last
+          up to two years; detailed data linked to the cookie is deleted after 14 months; aggregated
+          page-view totals are kept.
+        </p>
+        <p>
+          Recipient: Google (Google Ireland Ltd and Google LLC), as the analytics provider. This is
+          a transfer abroad, including to the US, on the basis of {transferBasis}.
+        </p>
+        <p>
+          You can withdraw consent at any time under{' '}
+          <button class="inline-btn" type="button" data-cc-open>
+            Cookie settings
+          </button>
+          . Withdrawing stops further collection and removes the dive_ga cookies; it doesn't affect
+          processing before you withdrew.
+        </p>
+        <p>
+          Your choice itself is stored in your browser (local storage entry "{ANALYTICS.storageKey}
+          ", kept for {ANALYTICS.choiceMonths} months, after which you are asked again). This is
+          needed to respect your choice and needs no consent.
+        </p>
+      </section>
+    ) : (
+      <section>
+        <h2>Cookies in the future</h2>
+        <p>
+          If optional features such as analytics or embedded third-party content are added later,
+          this page will be updated first, and nothing non-essential will run until you have given
+          your consent.
+        </p>
+      </section>
+    )}
+
+    <section>
+      <h2>Your rights</h2>
+      <p>
+        Under KVKK Article 11 you can apply to the data controller to: (a) learn whether your
+        personal data is processed; (b) if so, request information about it; (c) learn the purpose
+        of the processing and whether the data is used for that purpose; (ç) know the third parties
+        in Türkiye or abroad to whom it is transferred; (d) have incomplete or inaccurate data
+        corrected; (e) have it deleted or destroyed under the conditions of KVKK Article 7; (f) have
+        the third parties it was transferred to told of a correction or deletion under (d) or (e);
+        (g) object to a result against you that arises solely from automated analysis of your data;
+        (ğ) claim compensation if you suffer damage from unlawful processing.
+        {analyticsOn &&
+          ' Where processing is based on your consent (analytics), you can withdraw it at any time under Cookie settings.'}{' '}
+        If the GDPR applies to you, you also have the rights in GDPR Articles 15–22 (access,
+        rectification, erasure, restriction, portability, objection) and may withdraw consent at any
+        time (Art. 7(3)).
+      </p>
+      <h3>How to apply</h3>
+      <p>
+        By e-mail to <a href={`mailto:${email}`}>{email}</a>. Please include your name and surname;
+        your T.C. identity number, or if you are not a Turkish citizen your nationality and passport
+        or ID number; an address for replies; and what you are asking for. I answer free of charge,
+        as soon as possible and within 30 days at the latest; if answering involves a separate cost,
+        a fee under the Board's tariff may apply. If I refuse a request, I will tell you why.
+      </p>
+      <h3>Complaints</h3>
+      <p>
+        If your request is refused, the answer is inadequate or there is no answer in time, you can
+        complain to the Personal Data Protection Board (KVK Kurulu) within 30 days of learning the
+        answer, and in any case within 60 days of your application. You must apply to the controller
+        first. If you are in the EU, you can also complain to your local data protection authority.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc {
+    display: grid;
+    gap: var(--space-7);
+    max-width: 46rem;
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 2rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-3);
+  }
+  .meta {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+  h3 {
+    font-size: var(--step-1);
+    margin: var(--space-5) 0 var(--space-2);
+  }
+  section p + p {
+    margin-top: var(--space-3);
+  }
+  section p,
+  .facts {
+    color: rgb(232 244 248 / 0.88);
+  }
+  .card {
+    padding: var(--space-6);
+    border-radius: 22px;
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+    padding-left: 1.1em;
+  }
+  .facts strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  a,
+  .inline-btn {
+    color: var(--bio);
+  }
+  .inline-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+  #analytics {
+    scroll-margin-top: var(--space-9);
+  }
+</style>

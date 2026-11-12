@@ -1,0 +1,248 @@
+---
+/**
+ * GUE.tv in the footer: the logo and "Get discount →" beside it are one button that opens a
+ * dialog explaining the discount codes and that the link is an affiliate link (Rewardful,
+ * ?via=nev works on any gue.tv page; new members get a discount, Nev a referral fee).
+ */
+const GUE_TV = 'https://gue.tv/?via=nev';
+const CODES = [
+  { label: '30% off your first month', code: 'AFF30M' },
+  { label: '20% off your first year', code: 'AFF20A' },
+];
+---
+
+<div class="guetv-offer" data-guetv>
+  <hr class="guetv-rule" />
+  <button class="guetv-open" type="button" aria-haspopup="dialog" data-guetv-open>
+    <span class="guetv lg">
+      <img src="/media/gue-tv-logo.webp" alt="GUE.tv" width="300" height="93" loading="lazy" />
+    </span>
+    <span class="arrow-link guetv-more">
+      Get discount{' '}
+      <span class="arrow" aria-hidden="true">
+        →
+      </span>
+    </span>
+  </button>
+
+  <dialog class="guetv-dialog lg lg-dark" aria-labelledby="guetv-title" data-guetv-dialog>
+    <button class="close" type="button" aria-label="Close" data-guetv-close>
+      ×
+    </button>
+    <h2 id="guetv-title">GUE.tv, with a discount</h2>
+    <p>
+      GUE.tv is GUE’s streaming platform: courses, expeditions and films from the diving community.
+      Join through my link and use one of these codes at checkout:
+    </p>
+    <ul class="codes">
+      {CODES.map((c) => (
+        <li>
+          <span class="code-label">{c.label}</span>
+          <button class="code" type="button" data-copy={c.code} aria-label={`Copy code ${c.code}`}>
+            <span>{c.code}</span>
+            <span class="copied" aria-live="polite" />
+          </button>
+        </li>
+      ))}
+    </ul>
+    <p class="fine">
+      This is an affiliate link: GUE.tv pays me a small referral fee when you join. It costs you
+      nothing extra.
+    </p>
+    <a class="go" href={GUE_TV} target="_blank" rel="noopener sponsored">
+      Go to GUE.tv →
+    </a>
+  </dialog>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-guetv]')) {
+    const dialog = root.querySelector<HTMLDialogElement>('[data-guetv-dialog]')!;
+    root.querySelector('[data-guetv-open]')!.addEventListener('click', () => dialog.showModal());
+    root.querySelector('[data-guetv-close]')!.addEventListener('click', () => dialog.close());
+    // a click on the backdrop (outside the panel) closes it
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    for (const b of root.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+      b.addEventListener('click', async () => {
+        const note = b.querySelector('.copied')!;
+        try {
+          await navigator.clipboard.writeText(b.dataset.copy!);
+          note.textContent = 'Copied';
+        } catch {
+          note.textContent = '';
+        }
+        window.setTimeout(() => (note.textContent = ''), 1600);
+      });
+    }
+  }
+</script>
+
+<style>
+  .guetv-offer {
+    margin-top: var(--space-4);
+  }
+  .guetv-rule {
+    width: 100%;
+    height: 1px;
+    margin: 0 0 var(--space-4);
+    border: 0;
+    background: var(--glass-border);
+  }
+  /* logo and line are one button: hovering either lifts the tile and draws the underline */
+  .guetv-open {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  /* liquid glass with a faint blue tint, so the logo's own blue sits in it rather than on it */
+  .guetv {
+    display: inline-block;
+    padding: 0.4rem 0.7rem;
+    border-radius: 12px;
+    line-height: 0;
+    --lg-rgb: 79 184 231;
+    --lg-alpha: 0.1;
+    transition:
+      --lg-alpha var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .guetv img {
+    display: block;
+    width: 4.25rem;
+    height: auto;
+    /* lifts the dark blue off the dark glass */
+    filter: brightness(1.25) saturate(1.1) drop-shadow(0 0 10px rgb(79 184 231 / 0.25));
+  }
+  .guetv-more {
+    font-size: 0.75rem;
+  }
+  .guetv-open:hover .guetv,
+  .guetv-open:focus-visible .guetv {
+    --lg-alpha: 0.18;
+    transform: translateY(-1px);
+  }
+  .guetv-open:hover .guetv-more,
+  .guetv-open:focus-visible .guetv-more {
+    background-size: 100% 1px;
+  }
+  .guetv-open:hover .arrow,
+  .guetv-open:focus-visible .arrow {
+    transform: translateX(4px);
+  }
+  .guetv-open:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 4px;
+    border-radius: 8px;
+  }
+
+  .guetv-dialog {
+    /* the glass classes set position: relative, which would lay the dialog out at the top of
+       the page (and scroll there to focus it); a modal sits fixed in the viewport */
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    max-height: calc(100svh - 2 * var(--space-5));
+    overflow: auto;
+    width: min(26rem, calc(100vw - 2 * var(--gutter)));
+    padding: var(--space-6);
+    border: 0;
+    border-radius: 24px;
+    color: var(--ink);
+    --lg-alpha: 0.72;
+  }
+  .guetv-dialog::backdrop {
+    background: rgb(1 5 10 / 0.6);
+    backdrop-filter: blur(4px);
+  }
+  .guetv-dialog[open] {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .guetv-dialog h2 {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1.1;
+    padding-right: var(--space-6);
+  }
+  .guetv-dialog p {
+    color: rgb(232 244 248 / 0.85);
+  }
+  .close {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(232 244 248 / 0.08);
+    color: inherit;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .codes {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .codes li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-top: 1px solid var(--glass-border);
+  }
+  .code-label {
+    font-size: var(--step--1);
+  }
+  .code {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgb(111 247 224 / 0.45);
+    border-radius: var(--radius-pill);
+    background: rgb(111 247 224 / 0.08);
+    color: var(--bio);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+  .copied {
+    font-size: 0.65rem;
+    color: var(--ink-muted);
+  }
+  .copied:empty {
+    display: none;
+  }
+  .fine {
+    font-size: 0.78rem;
+    color: var(--ink-muted) !important;
+  }
+  .go {
+    justify-self: start;
+    padding: 0.7rem 1.2rem;
+    border-radius: var(--radius-pill);
+    background: var(--bio);
+    color: var(--ink-surface);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+  }
+</style>

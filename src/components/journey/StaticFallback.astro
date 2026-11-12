@@ -1,0 +1,123 @@
+---
+/**
+ * Lightweight atmosphere used when the WebGL scene is not running
+ * (reduced motion, low-end devices, no WebGL2, `?lite`), and as the first paint everywhere.
+ * CSS only; driven by the variables published by tracker.ts.
+ */
+---
+
+<div class="atmosphere" aria-hidden="true">
+  <div class="rays"></div>
+  <div class="motes motes-a"></div>
+  <div class="motes motes-b"></div>
+  <div class="blackout"></div>
+  <div class="torch"></div>
+  <div class="overunder">
+    <div class="sky"></div>
+  </div>
+</div>
+
+<style>
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  :global(.scene-active) .atmosphere {
+    display: none;
+  }
+
+  .rays {
+    position: absolute;
+    inset: -20% -10% 20%;
+    background: repeating-conic-gradient(
+      from 180deg at 50% -10%,
+      rgb(255 255 255 / 0) 0deg,
+      rgb(255 255 255 / 0.16) 2deg,
+      rgb(255 255 255 / 0) 5deg,
+      rgb(255 255 255 / 0) 9deg
+    );
+    mask-image: linear-gradient(to bottom, black, transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 80%);
+    opacity: max(0, 1 - var(--depth-m, 0) / 30);
+    animation: sway 14s var(--ease-in-out) infinite alternate;
+  }
+
+  .motes {
+    position: absolute;
+    inset: -50% 0 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 18%, rgb(232 244 248 / 0.7), transparent),
+      radial-gradient(1px 1px at 33% 72%, rgb(232 244 248 / 0.6), transparent),
+      radial-gradient(2px 2px at 58% 41%, rgb(232 244 248 / 0.5), transparent),
+      radial-gradient(1px 1px at 77% 13%, rgb(232 244 248 / 0.7), transparent),
+      radial-gradient(1.5px 1.5px at 89% 64%, rgb(232 244 248 / 0.5), transparent),
+      radial-gradient(1px 1px at 46% 90%, rgb(232 244 248 / 0.6), transparent);
+    background-size: 340px 340px;
+    opacity: min(0.9, 0.15 + var(--depth-m, 0) / 90);
+    animation: drift 60s linear infinite;
+  }
+  .motes-b {
+    background-size: 520px 520px;
+    animation-duration: 95s;
+    filter: blur(1px);
+  }
+
+  .blackout {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: calc(var(--dark, 0) * 0.92);
+  }
+
+  .torch {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 34% 48% at var(--mx, 50%) var(--my, 45%),
+      rgb(255 232 184 / 0.26),
+      rgb(255 232 184 / 0.07) 45%,
+      transparent 70%
+    );
+    opacity: var(--torch, 0);
+  }
+
+  /* over-under frame at the surface: a fair-weather sky above the waterline at 80% */
+  .overunder {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 80%;
+    transform: translateY(calc(var(--breach, 0) * -101%));
+    border-bottom: 2px solid rgb(255 255 255 / 0.75);
+    box-shadow: 0 6px 24px rgb(255 255 255 / 0.25);
+  }
+  .sky {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 74% 30%, rgb(255 252 240) 0 1.6%, rgb(255 244 220 / 0.55) 2.5%, transparent 22%),
+      radial-gradient(ellipse 22% 7% at 30% 55%, rgb(255 255 255 / 0.75), transparent 70%),
+      radial-gradient(ellipse 28% 6% at 62% 72%, rgb(255 255 255 / 0.6), transparent 70%),
+      radial-gradient(ellipse 16% 5% at 12% 78%, rgb(255 255 255 / 0.55), transparent 70%),
+      linear-gradient(to bottom, #3381c9, #8fc0e3 60%, #d8ecf2);
+  }
+
+  @keyframes sway {
+    to {
+      transform: rotate(3deg) translateX(2%);
+    }
+  }
+  @keyframes drift {
+    to {
+      transform: translateY(50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rays,
+    .motes {
+      animation: none;
+    }
+  }
+</style>

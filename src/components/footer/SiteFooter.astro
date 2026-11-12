@@ -1,0 +1,521 @@
+---
+/**
+ * Floating footer card over the deep scene (inspired by the footer Nevcan liked on codeofsagar.in,
+ * reinterpreted: the ghost mark is the NEV logo as a pane of glass cut into the card).
+ */
+import GueTvOffer from './GueTvOffer.astro';
+import { navItems } from '@/data/navigation';
+import { t } from '@/i18n';
+import UpcomingEvents from './UpcomingEvents.astro';
+import SocialLinks from './SocialLinks.astro';
+import { upcoming, type UpcomingEvent } from '@/data/events';
+import { analyticsOn } from '@/data/analytics';
+
+interface Props {
+  /** design previews only: show these (sample) events instead of the confirmed ones */
+  previewEvents?: UpcomingEvent[];
+  /** the homepage's full footer (pitch, contact, upcoming dates); detail pages get a compact one */
+  full?: boolean;
+}
+const { previewEvents, full = false } = Astro.props;
+
+const s = t();
+const year = new Date().getFullYear();
+/** Nevcan's choice: the range starts in 1987 */
+const SINCE = 1987;
+const TIME_ZONE = 'Europe/Istanbul';
+const EMAIL = 'nev@gue.com';
+// the strokes of src/assets/brand/nev.svg
+/** the glass NEV mark in the card; switched off for now to compare (Nev, 2026-11-11) */
+const SHOW_MARK = false;
+const MARK = 'M350 283 533 485V283M624 283h159M624 384h159M624 485h159M874 283v202l183-202';
+// the mark's filled shape (outer edge of the outline), as a CSS mask: the card's tinted
+// background is cut away there and a lighter pane of glass sits in the opening
+const MARK_FILL = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='300 237 803 294'><path d='${MARK}' fill='none' stroke='#fff' stroke-width='43' stroke-linecap='round' stroke-linejoin='round'/><circle cx='353' cy='478' r='28.5' fill='#fff'/></svg>`,
+)}")`;
+---
+
+<footer class="footer" id="contact" data-footer>
+  <SocialLinks />
+  <div
+    class:list={['card', { compact: !full, 'no-mark': !SHOW_MARK }]}
+    style={`--mark: ${MARK_FILL}`}
+  >
+    <div class="card-bg" aria-hidden="true"></div>
+    <div class="ghost-glass" aria-hidden="true"></div>
+    <!-- the NEV mark as a hollow outline: the stroke minus a slightly thinner copy of itself -->
+    <svg class="ghost" viewBox="300 237 803 294" aria-hidden="true" focusable="false">
+      <defs>
+        <mask id="ghost-mark" maskUnits="userSpaceOnUse" x="300" y="237" width="803" height="294">
+          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d={MARK} stroke="#fff" stroke-width="43" />
+            <path d={MARK} stroke="#000" stroke-width="40" />
+          </g>
+          <circle cx="353" cy="478" r="28.5" fill="#fff" />
+          <circle cx="353" cy="478" r="27" fill="#000" />
+        </mask>
+      </defs>
+      <rect x="300" y="237" width="803" height="294" fill="currentColor" mask="url(#ghost-mark)" />
+    </svg>
+
+    {full && (
+      <>
+        <div class="top">
+          <div class="pitch">
+            <p class="kicker">Made it to the bottom? Good sign.</p>
+            <h2 class="headline">Plan your next dive.</h2>
+          </div>
+          <div class="contact">
+            <p class="label">Email</p>
+            <a class="big-link" href={`mailto:${EMAIL}`}>
+              <span>{EMAIL}</span>
+              <span class="arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <div class="rule" aria-hidden="true"></div>
+      </>
+    )}
+
+    <div class="cols">
+      <nav class="col col-chapters" aria-label="Footer: chapters">
+        <p class="label">Chapters</p>
+        <ul class="chapters">
+          {navItems.map((n) => (
+            <li>
+              <a class="link" href={n.href}>
+                {s.nav[n.key]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="col col-time">
+        <div class="time">
+          <p class="label">Local time</p>
+          <p class="clock" data-clock data-tz={TIME_ZONE}>
+            --:--
+          </p>
+          <p class="muted">{TIME_ZONE.split('/')[1]}, TR</p>
+        </div>
+        {/* Nev's GUE.tv referral (Rewardful, ?via=nev works on any gue.tv page): new members
+            get a discount and Nev a commission; disclosed on the privacy page). The logo keeps
+            its own colours on a light glass tile, as it would on its own site */}
+        <GueTvOffer />
+      </div>
+      {full ? (
+        <div class="col col-upcoming">
+          <UpcomingEvents
+            events={previewEvents ?? upcoming}
+            email={EMAIL}
+            sample={!!previewEvents}
+          />
+        </div>
+      ) : (
+        <div class="col col-email">
+          <p class="label">Email</p>
+          {/* same as the full footer's contact link */}
+          <a class="big-link" href={`mailto:${EMAIL}`}>
+            <span>{EMAIL}</span>
+            <span class="arrow" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+      )}
+    </div>
+
+    <div class="bottom">
+      <p class="muted">
+        © {SINCE}–{year} Nevcan Uludaş ·{' '}
+        <a class="link" href="/privacy">
+          Privacy &amp; cookies
+        </a>
+        {analyticsOn && (
+          <>
+            {' · '}
+            {/* opens the consent dialog (CookieConsent.astro); hidden without JavaScript */}
+            <button class="link cookie-settings" type="button" data-cc-open>
+              Cookie settings
+            </button>
+          </>
+        )}
+      </p>
+      <a class="link up" href="#main" data-to-surface>
+        Back to the surface <span aria-hidden="true">↑</span>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // live local time
+  const clock = document.querySelector<HTMLElement>('[data-clock]');
+  if (clock) {
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: clock.dataset.tz,
+    });
+    const tick = () => (clock.textContent = fmt.format(new Date()));
+    tick();
+    setInterval(tick, 15000);
+  }
+
+  // ascend through the whole journey in reverse
+  document.querySelector('[data-to-surface]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    document.getElementById('main')?.focus({ preventScroll: true });
+  });
+
+  import { onFirstIntent } from '@/components/journey/intent';
+
+  // scroll-scrubbed entrance: the card rises, the ghost mark drifts up
+  const footer = document.querySelector<HTMLElement>('[data-footer]');
+  if (footer && !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    onFirstIntent(() => {
+      Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+        ([{ gsap }, { ScrollTrigger }]) => {
+          gsap.registerPlugin(ScrollTrigger);
+          const card = footer.querySelector('.card');
+          const st = { trigger: footer, start: 'top bottom', end: 'bottom bottom', scrub: 0.6 };
+          gsap.fromTo(
+            card,
+            // the frame stays whole while it rises (no clip-path cropping its border)
+            { y: 140, scale: 0.96 },
+            {
+              y: 0,
+              scale: 1,
+              ease: 'power2.out',
+              scrollTrigger: st,
+            },
+          );
+          // the mark, its glass and the opening in the card move together through --lift
+          gsap.fromTo(card, { '--lift': 1 }, { '--lift': 0, ease: 'none', scrollTrigger: st });
+          gsap.fromTo(
+            footer.querySelectorAll('.headline, .contact, .col'),
+            { y: 40, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: 0.06,
+              ease: 'power2.out',
+              scrollTrigger: { ...st, start: 'top 85%' },
+            },
+          );
+        },
+      );
+    });
+</script>
+
+<style>
+  .footer {
+    scroll-snap-align: end;
+    position: relative;
+    z-index: 4;
+    /* same column as the nav capsule, clear of the depth rail, with air all round */
+    padding: var(--space-8) var(--gutter) clamp(1.5rem, 1rem + 3vw, 3.5rem);
+  }
+  @media (min-width: 900px) {
+    .footer {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  .card {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: var(--space-7);
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: clamp(2rem, 1rem + 3vw, 4rem) clamp(1.25rem, 0.5rem + 3.5vw, 4rem) var(--space-6);
+    border: 1px solid rgb(232 244 248 / 0.18);
+    border-radius: 24px;
+    box-shadow: 0 -30px 120px rgb(79 184 231 / 0.08);
+    /* the NEV mark: size, resting offset from the bottom, and the entrance lift (0 = at rest) */
+    --ghost-w: clamp(24.8rem, 9.5rem + 56.4vw, 72.1rem);
+    --ghost-b: calc(clamp(0rem, -0.5rem + 1.25vw, 1.25rem) - 25px);
+    --lift: 0;
+    --ghost-y: calc(var(--ghost-b) - var(--lift) * 0.35 * var(--ghost-w) * 294 / 803);
+  }
+  /* the tinted, frosted card, with the mark cut out of it */
+  .card-bg,
+  .ghost-glass {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+  }
+  .card-bg {
+    inset: 0;
+    background: rgb(2 6 11 / 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    mask-image: var(--mark), linear-gradient(#000 0 0);
+    -webkit-mask-image: var(--mark), linear-gradient(#000 0 0);
+    mask-size:
+      var(--ghost-w) auto,
+      100% 100%;
+    -webkit-mask-size:
+      var(--ghost-w) auto,
+      100% 100%;
+    mask-position:
+      left 50% bottom var(--ghost-y),
+      0 0;
+    -webkit-mask-position:
+      left 50% bottom var(--ghost-y),
+      0 0;
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+  }
+  /* a pane of lighter glass in the opening: the deep scene shows through, softly */
+  .ghost-glass {
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    bottom: var(--ghost-y);
+    width: var(--ghost-w);
+    aspect-ratio: 803 / 294;
+    background:
+      linear-gradient(165deg, rgb(232 244 248 / 0.07), rgb(232 244 248 / 0.01) 55%),
+      rgb(2 6 11 / 0.6);
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    mask-image: var(--mark);
+    -webkit-mask-image: var(--mark);
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
+  }
+
+  /* centred, sitting a little above the bottom line (centred with margins, not a transform:
+     the entrance animation owns the transform) */
+  .ghost {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    /* low enough that the card's lower edge trims its foot */
+    bottom: var(--ghost-y);
+    z-index: 0;
+    width: var(--ghost-w);
+    height: auto;
+    /* the glass pane's rim */
+    color: rgb(232 244 248 / 0.18);
+    pointer-events: none;
+    user-select: none;
+  }
+  /* detail pages: no pitch, no dates; tighter all round, and a smaller mark */
+  .card.compact {
+    gap: var(--space-6);
+    padding-block: var(--space-7) var(--space-5);
+  }
+  .no-mark .ghost,
+  .no-mark .ghost-glass {
+    display: none;
+  }
+  .no-mark .card-bg {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .card.compact {
+    --ghost-w: clamp(15.7rem, 6.3rem + 28.2vw, 37.7rem);
+  }
+  .card > :not(.ghost, .card-bg, .ghost-glass) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--space-6);
+  }
+  .kicker,
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .kicker {
+    margin-bottom: var(--space-4);
+  }
+  .headline {
+    font-size: var(--step-5);
+  }
+  .contact {
+    display: grid;
+    justify-items: end;
+    gap: var(--space-3);
+    text-align: right;
+  }
+  .big-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0% 1px no-repeat;
+    transition: background-size var(--dur-base) var(--ease-out);
+  }
+  .big-link:hover {
+    background-size: 100% 1px;
+  }
+  .big-link .arrow {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .big-link:hover .arrow {
+    transform: translateX(6px);
+  }
+  .muted {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--glass-border),
+      rgb(79 184 231 / 0.35),
+      var(--glass-border)
+    );
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--space-6);
+  }
+  /* wide screens: a 12-column split of 4 / 3 / 5 (chapters, time, upcoming) */
+  @media (min-width: 900px) {
+    .cols {
+      grid-template-columns: 4fr 3fr 5fr;
+    }
+  }
+  /* narrow screens: the large address gets the full width */
+  @media (max-width: 899px) {
+    .col-email {
+      grid-column: 1 / -1;
+    }
+  }
+  .col ul {
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .col .label {
+    margin-bottom: var(--space-3);
+  }
+  .col ul.chapters {
+    grid-template-columns: repeat(2, max-content);
+    column-gap: var(--space-7);
+  }
+  .col ul .link {
+    font-size: var(--step--1);
+  }
+  .link {
+    position: relative;
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) 100% 100% / 0% 1px no-repeat;
+    transition: background-size var(--dur-base) var(--ease-out);
+  }
+  .link:hover {
+    background-position: 0 100%;
+    background-size: 100% 1px;
+  }
+  .cookie-settings {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  :global(html:not(.js)) .cookie-settings {
+    display: none;
+  }
+  .clock {
+    font-family: var(--font-mono);
+    font-size: var(--step-1);
+    font-variant-numeric: tabular-nums;
+  }
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--glass-border);
+  }
+  .up span {
+    display: inline-block;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .up:hover span {
+    transform: translateY(-4px);
+  }
+
+  @media (max-width: 640px) {
+    .footer {
+      padding: var(--space-6) var(--space-4) var(--space-4);
+    }
+    .contact {
+      justify-items: start;
+      text-align: left;
+    }
+    .cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-4);
+    }
+    /* the two-column chapter list takes the full row on phones */
+    .col-chapters,
+    .col-upcoming {
+      grid-column: 1 / -1;
+    }
+    /* phones: local time (1/3) and GUE.tv (2/3) side by side across the full row, split by a
+       vertical line instead of the rule above GUE.tv */
+    .col-time {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .col-time :global(.guetv-offer) {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      margin-top: 0;
+      padding-left: var(--space-4);
+      border-left: 1px solid var(--glass-border);
+    }
+    .col-time :global(.guetv-rule) {
+      display: none;
+    }
+    /* the logo keeps its size; on the narrowest phones "Get discount" moves below it */
+    .col-time :global(.guetv-open) {
+      flex-wrap: wrap;
+      row-gap: var(--space-2);
+    }
+    .col-time :global(.guetv) {
+      flex: none;
+    }
+    .col-time :global(.guetv-more) {
+      white-space: nowrap;
+    }
+  }
+</style>

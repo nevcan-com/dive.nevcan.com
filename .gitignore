@@ -1,0 +1,26 @@
+# build output
+dist/
+.astro/
+.vercel/
+
+# private working notes (kept locally, not published)
+TODO.md
+design/privacy-ga4.md
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+
+# env
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.claude/settings.local.json
+
+# original photos / footage (large, not shipped; encoded copies live in public/media)
+source-media/

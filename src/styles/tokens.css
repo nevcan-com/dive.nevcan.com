@@ -1,0 +1,92 @@
+/*
+ * Design tokens — dive.nevcan.com
+ * Colours are indexed by depth: the page literally gets darker as you descend.
+ */
+:root {
+  /* ---- Depth palette (surface → abyss) ---- */
+  --depth-0: #bfe9f2; /* surface glare */
+  --depth-5: #5cc6d6; /* sunlit shallows */
+  --depth-15: #1f93b5; /* blue water */
+  --depth-30: #0d5f8c; /* reduced ambient */
+  --depth-50: #08395e; /* twilight */
+  --depth-80: #041c33; /* deep */
+  --depth-100: #020c18; /* near-dark */
+  --depth-120: #01050a; /* abyss */
+
+  /* ---- Accents ---- */
+  --torch: #ffe8b8; /* diver light, warm white */
+  --torch-hot: #ffc46b; /* torch core / highlights */
+  --bio: #6ff7e0; /* bioluminescent cyan, used sparingly for focus + data */
+
+  /* ---- Text ---- */
+  --ink-surface: #04202e; /* dark text for the bright surface band */
+  --ink: #e8f4f8; /* default light text */
+  --ink-muted: #9fbccb; /* AA on --depth-30 and darker */
+  --ink-faint: #6d8a99; /* decorative only, never body copy */
+
+  /* ---- Surfaces ---- */
+  --glass: rgb(4 28 51 / 0.55);
+  --glass-border: rgb(232 244 248 / 0.12);
+  --scrim: rgb(1 5 10 / 0.7);
+
+  /* ---- Type ---- */
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-text: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* fluid scale: 360px → 1440px */
+  --step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
+  --step-0: clamp(1rem, 0.96rem + 0.19vw, 1.125rem);
+  --step-1: clamp(1.25rem, 1.17rem + 0.37vw, 1.5rem);
+  --step-2: clamp(1.56rem, 1.4rem + 0.7vw, 2.07rem);
+  --step-3: clamp(1.95rem, 1.66rem + 1.27vw, 2.95rem);
+  --step-4: clamp(2.44rem, 1.93rem + 2.27vw, 4.2rem);
+  --step-5: clamp(3.05rem, 2.17rem + 3.9vw, 6rem);
+  --step-6: clamp(3.8rem, 2.3rem + 6.6vw, 8.5rem);
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.3;
+  --leading-body: 1.6;
+  --tracking-caps: 0.18em;
+
+  /* ---- Space (8px base) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 3rem);
+  --measure: 62ch;
+  --content-max: 76rem;
+
+  /* ---- Shape ---- */
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-pill: 999px;
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-base: 320ms;
+  --dur-slow: 900ms;
+
+  /* ---- Layers ---- */
+  --z-scene: 0;
+  --z-content: 10;
+  --z-hud: 40;
+  --z-nav: 50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

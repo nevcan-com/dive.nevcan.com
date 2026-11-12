@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DepthJourney from '@/components/journey/DepthJourney.astro';
+import { social } from '@/data/social';
+
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Nevcan Uludaş',
+  url: 'https://dive.nevcan.com',
+  jobTitle: 'GUE Instructor',
+  affiliation: { '@type': 'Organization', name: 'Global Underwater Explorers' },
+  sameAs: social.map((l) => l.href),
+};
+---
+
+<BaseLayout fullFooter jsonLd={personLd}>
+  <DepthJourney heroPhoto="/media/surface-overunder.webp" />
+</BaseLayout>

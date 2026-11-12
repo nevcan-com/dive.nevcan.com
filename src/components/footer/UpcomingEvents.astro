@@ -1,0 +1,180 @@
+---
+/**
+ * Footer column: the next few courses/trips (up to three) and a call to action. With no confirmed
+ * dates it says so, and the call to action carries the column on its own.
+ */
+import type { UpcomingEvent } from '@/data/events';
+
+interface Props {
+  events: UpcomingEvent[];
+  email: string;
+  /** design previews only: marks the dates as sample data */
+  sample?: boolean;
+  /** 'calendar' (footer): to the booking page's full calendar; 'email' (the booking page itself) */
+  cta?: 'calendar' | 'email';
+}
+const { events, email, sample = false, cta: ctaKind = 'calendar' } = Astro.props;
+const next = events.slice(0, 3);
+
+const fmt = (iso: string, o: Intl.DateTimeFormatOptions) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', o);
+/** e.g. "1 Mar 2027", "12–15 Mar 2027"; the year is always shown, dates can be a year out */
+function range(e: UpcomingEvent) {
+  const end = e.end || e.start;
+  return `${days(e)} ${end.slice(0, 4)}`;
+}
+function days(e: UpcomingEvent) {
+  if (!e.end || e.end === e.start) return fmt(e.start, { day: 'numeric', month: 'short' });
+  const sameMonth = e.start.slice(0, 7) === e.end.slice(0, 7);
+  return sameMonth
+    ? `${fmt(e.start, { day: 'numeric' })}–${fmt(e.end, { day: 'numeric', month: 'short' })}`
+    : `${fmt(e.start, { day: 'numeric', month: 'short' })} – ${fmt(e.end, { day: 'numeric', month: 'short' })}`;
+}
+const STATUS: Record<UpcomingEvent['status'], string> = {
+  open: 'Places open',
+  few: 'Last places',
+  full: 'Waiting list',
+};
+const cta =
+  ctaKind === 'calendar'
+    ? { href: '/booking', label: 'See the full calendar' }
+    : {
+        href: `mailto:${email}?subject=${encodeURIComponent('Course request')}`,
+        label: 'Want a course? Write to me',
+      };
+---
+
+<div class="upcoming">
+  <div class="head">
+    <p class="label">Upcoming</p>
+    {sample && <span class="sample">Sample data</span>}
+  </div>
+
+  {next.length ? (
+    <ol class="events">
+      {next.map((e) => (
+        <li class="event">
+          <span class="when">{range(e)}</span>
+          <span class="what">
+            <span class="title">{e.title}</span>
+            <span class="where">{e.location}</span>
+          </span>
+          <span class={`status is-${e.status}`}>{STATUS[e.status]}</span>
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <p class="empty">New dates are being planned.</p>
+  )}
+
+  <a class="cta arrow-link" href={cta.href}>
+    {cta.label}{' '}
+    <span class="arrow" aria-hidden="true">
+      →
+    </span>
+  </a>
+</div>
+
+<style>
+  .upcoming {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .sample {
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffc46b;
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.35);
+  }
+
+  /* compact rows: dates, title and place on one line each side; rules only between rows */
+  .events {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .event {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+  }
+  .event + .event {
+    border-top: 1px solid var(--glass-border);
+  }
+  .when {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-muted);
+  }
+  .what {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--space-2);
+    min-width: 0;
+  }
+  .title {
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+  .where {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+  }
+  .status {
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+  .status::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 50%;
+    vertical-align: 1px;
+    background: currentColor;
+  }
+  .status.is-open {
+    color: var(--bio);
+  }
+  .status.is-few {
+    color: #ffc46b;
+  }
+  .status.is-full {
+    color: var(--ink-muted);
+  }
+  .empty {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  /* the call to action is a plain link, underlined on hover */
+  /* the look is the site's standard .arrow-link (global.css) */
+  .cta {
+    justify-self: start;
+    font-size: var(--step--1);
+  }
+</style>

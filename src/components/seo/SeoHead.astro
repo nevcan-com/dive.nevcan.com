@@ -1,0 +1,45 @@
+---
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  title?: string;
+  description?: string;
+  locale?: Locale;
+  /** Absolute or root-relative OG image. Omitted until real imagery exists. */
+  image?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, locale = 'en', image, noindex = false, jsonLd } = Astro.props;
+const s = t(locale);
+const fullTitle = title ? `${title} · ${s.site.shortName}` : s.site.name;
+/** shared links: the homepage carries the full name */
+const shareTitle = title ? fullTitle : s.site.shareName;
+const desc = description ?? s.site.description;
+// build.format 'file' makes the build-time path /about.html (and /index.html); the public URL is
+// /about (and /)
+const path = Astro.url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '');
+const canonical = new URL(path || '/', Astro.site);
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={desc} />
+<link rel="canonical" href={canonical.href} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={s.site.shareName} />
+<meta property="og:title" content={shareTitle} />
+<meta property="og:description" content={desc} />
+<meta property="og:url" content={canonical.href} />
+<meta property="og:locale" content="en_US" />
+{ogImage && <meta property="og:image" content={ogImage} />}
+<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+<meta name="twitter:title" content={shareTitle} />
+<meta name="twitter:description" content={desc} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}
+
+{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}

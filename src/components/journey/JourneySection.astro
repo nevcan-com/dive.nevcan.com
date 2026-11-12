@@ -1,0 +1,1008 @@
+---
+import type { JourneySection } from '@/data/journey';
+import { bandGradient } from './depth';
+
+interface Props {
+  section: JourneySection;
+  index: number;
+  /** hero only: the over-under photograph that pans past the waterline (homepage) */
+  heroPhoto?: string;
+  /** where its vertical pan starts (0 = top of the photo, 1 = bottom) */
+  heroPhotoFrom?: number;
+  /** how the photo leaves: 'pan' (pans and fades) or 'scroll' (it and the title scroll away) */
+  heroPhotoExit?: 'pan' | 'scroll';
+}
+const { section: s, index, heroPhoto, heroPhotoFrom = 0.14, heroPhotoExit = 'pan' } = Astro.props;
+const hero = index === 0;
+/** split copy on deliberate `\n` breaks (honoured on wide screens, flowing on phones) */
+const lines = (text: string) => text.split('\n');
+const Heading = hero ? 'h1' : 'h2';
+/** Education's cards sit in a looping sideways slider with arrows either side */
+const slider = s.id === 'education' && !!s.items;
+const SliderWrap = slider ? 'div' : Fragment;
+// footage chapters: without WebGL, the clip's poster sits under a depth tint
+const fallbackBg =
+  s.clip && !hero
+    ? `${bandGradient(s.depthStart, s.depthEnd, 4, s.natural ? 0.2 : 0.55)}, url(/media/${s.clip}.webp) center / cover no-repeat`
+    : bandGradient(s.depthStart, s.depthEnd);
+---
+
+<section
+  id={s.id}
+  class:list={[
+    'band',
+    `align-${s.align ?? 'start'}`,
+    {
+      'ink-surface': hero,
+      hero,
+      'has-clip': !!s.clip && !hero,
+      'has-model': !!s.model,
+      finale: s.finale,
+    },
+  ]}
+  data-depth-start={s.depthStart}
+  data-depth-end={s.depthEnd}
+  style={`--band-bg: ${fallbackBg}`}
+  aria-labelledby={`${s.id}-title`}
+>
+  {hero && heroPhoto && (
+    <div
+      class:list={['hero-photo', `exit-${heroPhotoExit}`]}
+      style={`--photo: url(${heroPhoto}); --photo-from: ${heroPhotoFrom}`}
+      aria-hidden="true"
+    />
+  )}
+  <div class:list={['band-inner', { reveal: !hero }]}>
+    {hero && !heroPhoto && (
+      /* (not on the over-under photo, which shows Nev already) Nev's face (every dive photo has him masked), in a leaf-shaped glass frame as on
+         dipnot.app's team page: round top-left and bottom-right, soft corners elsewhere */
+      <span class="portrait-ring">
+        <img
+          class="portrait"
+          src="/media/nev-portrait-256.webp"
+          srcset="/media/nev-portrait-256.webp 256w, /media/nev-portrait-384.webp 384w"
+          sizes="(min-width: 48rem) 8rem, 5.5rem"
+          alt="Nevcan Uludaş"
+          width="128"
+          height="128"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </span>
+    )}
+    {!hero && <p class="eyebrow">{s.eyebrow}</p>}
+    <Heading id={`${s.id}-title`} class="title">
+      {lines(s.title).map((line, i) => (
+        <>
+          {i > 0 && ' '}
+          <span class="line">{line}</span>
+        </>
+      ))}
+    </Heading>
+    {s.lede && (
+      <p class:list={['lede', { 'has-lines': s.lede.includes('\n') }]}>
+        {hero
+          ? s.lede.split(' · ').map((part, i) => (
+              <>
+                {i > 0 && ' '}
+                <span class="nowrap role lg">{part}</span>
+              </>
+            ))
+          : lines(s.lede).map((line, i) => (
+              <>
+                {i > 0 && ' '}
+                <span class="line">{line}</span>
+              </>
+            ))}
+      </p>
+    )}
+
+    {s.items && (
+      <SliderWrap {...(slider ? { class: 'slider-wrap', 'data-slider-wrap': '' } : {})}>
+      {slider && (
+        <button class="slider-btn prev" type="button" aria-label="Previous" data-slider-prev hidden>
+          <svg viewBox="0 0 24 64" aria-hidden="true"><path d="M18 4 6 32l12 28" /></svg>
+        </button>
+      )}
+      <ul
+        class:list={[
+          'items',
+          {
+            timeline: s.id === 'about',
+            pathways: s.id === 'education' || s.id === 'exploration',
+            projects: s.id === 'research',
+            slider: s.id === 'education',
+          },
+        ]}
+        tabindex={slider ? 0 : undefined}
+        aria-label={slider ? `${s.title}, scroll sideways for more` : undefined}
+        data-slider={slider ? '' : undefined}
+      >
+        {s.items.map((item) => (
+          <li
+            class:list={[
+              'item',
+              { todo: item.todo, lg: s.id !== 'about', 'lg-dark': s.id !== 'about' },
+              item.tone && `tone-${item.tone}`,
+              item.wide && 'wide',
+            ]}
+          >
+            <span class="item-title">{item.title}</span>
+            {item.text && <span class="item-text">{item.text}</span>}
+            {(item.wide || item.arrow) && (
+              <span class="item-arrow" aria-hidden="true">
+                →
+              </span>
+            )}
+            {item.tag && <span class="item-tag">{item.tag}</span>}
+            {item.todo && <span class="item-todo">Copy pending</span>}
+            {item.tags && (
+              <ul
+                class="chips"
+                aria-label={`${item.title} ${s.id === 'education' ? 'courses' : 'projects'}`}
+              >
+                {item.tags.map((tag) => (
+                  <li class="chip">{tag}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+      {slider && (
+        <button class="slider-btn next" type="button" aria-label="Next" data-slider-next hidden>
+          <svg viewBox="0 0 24 64" aria-hidden="true"><path d="M6 4l12 28L6 60" /></svg>
+        </button>
+      )}
+      </SliderWrap>
+    )}
+
+    {s.cta && (
+      <a
+        class:list={['cta', 'lg', 'lg-press', { 'cta-mint': s.cta.tone === 'mint' }]}
+        href={s.cta.href}
+      >
+        {s.cta.label}
+        <span aria-hidden="true">→</span>
+      </a>
+    )}
+
+    {s.model && (
+      <div
+        class="model-stage"
+        data-model={s.model.src}
+        role="img"
+        aria-label={`${s.model.label}. Drag or use the arrow keys to turn it.`}
+        tabindex="0"
+      >
+        <span class="model-hint" aria-hidden="true">
+          Drag to rotate
+        </span>
+      </div>
+    )}
+
+    {s.cue && (
+      <p class="cue" aria-hidden="true">
+        <span>{s.cue}</span>
+        <span class="cue-line" />
+      </p>
+    )}
+  </div>
+</section>
+
+<script>
+  // Education: a sideways strip of pathway cards that loops. The arrows either side step one
+  // card; past the last card the first comes round again (the card at the far end is moved to
+  // the other end first, the strip shifted by one card so nothing jumps, then it glides on).
+  for (const wrap of document.querySelectorAll<HTMLElement>('[data-slider-wrap]')) {
+    const track = wrap.querySelector<HTMLElement>('[data-slider]')!;
+    const prev = wrap.querySelector<HTMLButtonElement>('[data-slider-prev]')!;
+    const next = wrap.querySelector<HTMLButtonElement>('[data-slider-next]')!;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const step = () => {
+      const first = track.firstElementChild as HTMLElement | null;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return (first?.offsetWidth ?? track.clientWidth) + gap;
+    };
+    const update = () => {
+      const fits = track.scrollWidth - track.clientWidth <= 1;
+      prev.hidden = next.hidden = fits;
+      wrap.classList.toggle('is-static', fits);
+    };
+    const go = (dir: 1 | -1) => {
+      const max = track.scrollWidth - track.clientWidth;
+      const d = step();
+      const atEnd = dir === 1 && track.scrollLeft >= max - d / 2;
+      const atStart = dir === -1 && track.scrollLeft <= d / 2;
+      if (atEnd || atStart) {
+        // snapping off while the card moves, or the browser re-snaps on its own as well
+        track.style.scrollSnapType = 'none';
+        if (atEnd) track.append(track.firstElementChild!);
+        else track.prepend(track.lastElementChild!);
+        track.scrollLeft += atEnd ? -d : d;
+        const restore = () => (track.style.scrollSnapType = '');
+        track.addEventListener('scrollend', restore, { once: true });
+        window.setTimeout(restore, 900);
+      }
+      track.scrollBy({ left: dir * d, behavior: reduced.matches ? 'auto' : 'smooth' });
+    };
+    prev.addEventListener('click', () => go(-1));
+    next.addEventListener('click', () => go(1));
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        go(e.key === 'ArrowRight' ? 1 : -1);
+      }
+    });
+    new ResizeObserver(update).observe(track);
+    update();
+  }
+
+  // 3D objects load as their chapter approaches, and only where WebGL works
+  const stages = document.querySelectorAll<HTMLElement>('.model-stage[data-model]');
+  if (stages.length) {
+    const webgl = (() => {
+      try {
+        return !!document.createElement('canvas').getContext('webgl2');
+      } catch {
+        return false;
+      }
+    })();
+    if (!webgl) stages.forEach((el) => el.classList.add('is-failed'));
+    else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            io.unobserve(e.target);
+            const el = e.target as HTMLElement;
+            import('./model-viewer')
+              .then(({ mountModel }) => mountModel(el, el.dataset.model!))
+              .catch(() => el.classList.add('is-failed'));
+          }
+        },
+        { rootMargin: '100% 0px' },
+      );
+      stages.forEach((el) => io.observe(el));
+    }
+  }
+</script>
+
+<style>
+  .band {
+    position: relative;
+    min-height: 150svh;
+    display: flex;
+    align-items: center;
+    padding: var(--space-10) var(--gutter);
+  }
+  /* off-screen chapters skip rendering (and their poster download) until approached */
+  .band:not(.hero) {
+    /* with reduced motion, chapters settle centred when scrolling stops (see global.css) */
+    scroll-snap-align: center;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 150svh;
+  }
+  .band::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--band-bg);
+  }
+  :global(.scene-active) .band::before {
+    display: none;
+  }
+
+  /* legibility over footage comes from the text itself: a band-attached scrim would slide
+     past as a hard-edged dark block between chapters */
+  .has-clip .band-inner {
+    text-shadow:
+      0 1px 24px rgb(1 5 10 / 0.55),
+      0 0 2px rgb(1 5 10 / 0.35);
+  }
+  /* fallback posters dissolve at their edges instead of cutting hard against the next chapter */
+  .has-clip::before {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+
+  /* the surface is a pinned over-under shot: the waterline rises past the camera as you scroll */
+  .hero {
+    min-height: 160svh;
+    align-items: flex-start;
+    padding: 0 var(--gutter);
+  }
+  .hero .band-inner {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    align-content: start;
+    padding-top: 19svh;
+    /* rises slowly; the water overtakes it and hides it (waterline.ts), no fade */
+    transform: translateY(calc(var(--breach, 0) * -18svh));
+  }
+
+  .band-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    justify-items: start;
+  }
+  .band-inner > * {
+    max-width: 40rem;
+  }
+  .align-end .band-inner {
+    justify-items: end;
+    text-align: right;
+  }
+  .align-center .band-inner {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .band .eyebrow {
+    color: var(--bio);
+  }
+  .ink-surface {
+    color: var(--ink-surface);
+  }
+  .ink-surface .eyebrow {
+    color: rgb(4 32 46 / 0.75);
+  }
+
+  .title {
+    font-size: var(--step-5);
+  }
+  .portrait-ring {
+    justify-self: center;
+    display: block;
+    width: max-content;
+    margin-bottom: var(--space-2);
+    padding: 0.45rem;
+    border-radius: 50% 10%;
+    line-height: 0;
+    background: rgb(255 255 255 / 0.18);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      inset 0 -1px 0 rgb(255 255 255 / 0.25),
+      inset 0 0 0 1px rgb(255 255 255 / 0.3),
+      0 14px 40px rgb(4 32 46 / 0.22);
+  }
+  .portrait {
+    display: block;
+    width: 5.5rem;
+    height: 5.5rem;
+    /* rounder than the frame, so the photo sits in it like a lens */
+    border-radius: 50% 35%;
+    object-fit: cover;
+    object-position: 50% 28%;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+  }
+  @media (min-width: 48rem) {
+    .portrait {
+      width: 8rem;
+      height: 8rem;
+    }
+  }
+  /* the hero's roles, each in a liquid-glass capsule */
+  .hero .lede:has(.role) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  /* same type as before the capsules (inherited from .hero .lede), with room around it */
+  .role {
+    display: inline-block;
+    padding: 0.75em 1.5em;
+    border-radius: var(--radius-pill);
+  }
+  .hero .title {
+    font-size: var(--step-6);
+    max-width: none;
+  }
+  .lede {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    max-width: 34ch;
+    opacity: 0.88;
+    /* short ledes: even lines, no single word left on the last one */
+    text-wrap: balance;
+  }
+  @media (min-width: 761px) {
+    .line {
+      display: block;
+    }
+    .lede.has-lines {
+      max-width: none;
+    }
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+  .hero .lede {
+    max-width: none;
+    font-family: var(--font-mono);
+    font-size: calc(var(--step--1) * 1.15);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  /* phones: the two roles side by side, a size smaller */
+  @media (max-width: 600px) {
+    .hero .lede:has(.role) {
+      flex-wrap: nowrap;
+      gap: var(--space-2);
+    }
+    .hero .lede {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+    }
+    .role {
+      padding: 0.7em 1.1em;
+    }
+  }
+
+  /* gone as soon as the descent starts */
+  .hero .cue {
+    opacity: clamp(0, calc(1 - var(--breach, 0) * 8), 1);
+  }
+  /* on the over-under photo the cue sits on bright water: dark ink reads there */
+  .hero:has(.hero-photo) .cue {
+    color: #05202e;
+  }
+  .cue {
+    position: absolute;
+    left: 50%;
+    bottom: 5svh;
+    translate: -50% 0;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .cue-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(currentColor, transparent);
+    transform-origin: top;
+    animation: cue 2.4s var(--ease-in-out) infinite;
+  }
+  @keyframes cue {
+    0% {
+      transform: scaleY(0);
+    }
+    50% {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleY(1);
+      opacity: 0;
+    }
+  }
+
+  .items {
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    width: 100%;
+    text-align: left;
+  }
+  .item {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-5);
+    border-radius: 18px;
+    color: var(--ink);
+  }
+  .item-title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.1;
+  }
+  .item-text {
+    color: var(--ink-muted);
+    font-size: var(--step--1);
+  }
+  .item-tag,
+  .item-todo {
+    justify-self: start;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+  }
+  .item-tag {
+    border: 1px solid var(--torch);
+    color: var(--torch);
+  }
+  .item-todo {
+    border: 1px dashed rgb(232 244 248 / 0.35);
+    color: var(--ink-muted);
+  }
+
+  /* education: three pathway cards side by side, courses as chips */
+  /* three course pathways on top, two wider services (Professional, Coaching) beneath */
+  .pathways {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  .pathways .item {
+    grid-column: span 2;
+  }
+  .pathways .item.wide {
+    grid-column: span 3;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-4);
+    row-gap: var(--space-1);
+  }
+  /* slimmer service cards: smaller title, tighter padding */
+  .pathways .item.wide {
+    padding-block: var(--space-3);
+  }
+  .wide .item-title {
+    grid-column: 1;
+    font-size: var(--step-1);
+  }
+  .wide .item-text {
+    grid-column: 1;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+  .item-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: var(--step-1);
+    color: var(--ink-muted);
+  }
+  .band-inner > .pathways {
+    max-width: 64rem;
+  }
+  .pathways .item {
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5) 1.25rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .item {
+    --tone: 232 244 248;
+  }
+  .tone-mint {
+    --tone: 111 247 224;
+  }
+  .tone-amber {
+    --tone: 255 196 107;
+  }
+  .tone-violet {
+    --tone: 196 166 255;
+  }
+  .chip {
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    color: rgb(var(--tone));
+    background: rgb(var(--tone) / 0.12);
+    border: 1px solid rgb(var(--tone) / 0.32);
+  }
+  @media (max-width: 760px) {
+    .pathways {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pathways .item,
+    .pathways .item.wide {
+      grid-column: auto;
+    }
+  }
+
+  /* education: a sideways strip of fixed 322px cards; as many whole cards show as fit (set by
+     the container queries below), one and a peek on phones */
+  .pathways.slider {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 322px;
+    width: 322px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    border-radius: 18px;
+  }
+  .pathways.slider::-webkit-scrollbar {
+    display: none;
+  }
+  .pathways.slider:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 4px;
+  }
+  .pathways.slider .item {
+    grid-column: auto;
+    grid-template-rows: auto auto 1fr;
+    scroll-snap-align: start;
+  }
+  .slider .chips {
+    align-self: start;
+    align-items: flex-start;
+  }
+  /* the strip with a tall, slim arrow either side, like a photo slider */
+  .band-inner > .slider-wrap {
+    width: 100%;
+    max-width: none;
+    container-type: inline-size;
+  }
+  .slider-wrap {
+    display: grid;
+    grid-template-columns: 2.5rem auto 2.5rem;
+    justify-content: end;
+    align-items: center;
+    column-gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .slider-wrap.is-static {
+    grid-template-columns: auto;
+  }
+  /* n cards = n × 322 + (n − 1) × 12 gap; the strip needs that plus 2 × (40 arrow + 12 gap) */
+  @container (min-width: 760px) {
+    .pathways.slider {
+      width: 656px;
+    }
+  }
+  @container (min-width: 1094px) {
+    .pathways.slider {
+      width: 990px;
+    }
+  }
+  @container (min-width: 1428px) {
+    .pathways.slider {
+      width: 1324px;
+    }
+  }
+  @container (min-width: 1762px) {
+    .pathways.slider {
+      width: 1658px;
+    }
+  }
+  .slider-wrap > .items {
+    margin-top: 0;
+  }
+  .slider-btn {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: min(9rem, 100%);
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: rgb(232 244 248 / 0.6);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      background 0.2s ease;
+  }
+  .slider-btn[hidden] {
+    display: none;
+  }
+  .slider-btn svg {
+    width: 1.1rem;
+    height: 3.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s var(--ease-out);
+  }
+  .slider-btn:hover {
+    color: var(--bio);
+    background: rgb(255 255 255 / 0.04);
+  }
+  .slider-btn.prev:hover svg {
+    transform: translateX(-3px);
+  }
+  .slider-btn.next:hover svg {
+    transform: translateX(3px);
+  }
+  .slider-btn:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 2px;
+  }
+  @media (max-width: 760px) {
+    .pathways.slider {
+      grid-template-columns: none;
+      grid-auto-columns: 86%;
+      width: auto;
+    }
+    .slider-wrap {
+      grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+      justify-content: stretch;
+      column-gap: var(--space-2);
+      margin-inline: calc(-1 * var(--space-2));
+      width: calc(100% + 2 * var(--space-2));
+    }
+    .slider-btn svg {
+      width: 0.8rem;
+      height: 2.5rem;
+    }
+  }
+
+  /* research: project cards, category chip above the title */
+  .projects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .band-inner > .projects {
+    max-width: 44rem;
+  }
+  .projects .item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    column-gap: var(--space-3);
+    row-gap: var(--space-2);
+    padding: var(--space-4) 1.25rem;
+  }
+  .projects .chips {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .projects .item-title {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: var(--step-1);
+    line-height: 1.15;
+  }
+  .projects .item-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+  @media (max-width: 760px) {
+    .projects {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .timeline .item {
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 0;
+    border-top: 1px solid currentColor;
+    border-radius: 0;
+    padding: var(--space-3) 0 0;
+    color: inherit;
+  }
+  .timeline .item-title {
+    font-family: var(--font-mono);
+    font-size: var(--step-1);
+    font-variant-numeric: tabular-nums;
+  }
+  .timeline .item-text {
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding: 0.85rem 1.4rem;
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    font-size: var(--step--1);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--ink);
+  }
+  .cta span {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .cta:hover span {
+    transform: translateX(3px);
+  }
+  /* a button dressed like the mint labels */
+  .cta-mint {
+    --lg-rgb: 111 247 224;
+    --lg-alpha: 0.12;
+    color: var(--bio);
+    box-shadow:
+      inset 0 0 0 1px rgb(111 247 224 / 0.35),
+      0 8px 28px -8px rgb(0 0 0 / 0.38);
+  }
+  .cta-mint.lg-press:hover {
+    --lg-alpha: 0.22;
+  }
+
+  /* reveal (enhancement only; content is visible without JS) */
+  :global(.js) .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+  :global(.js) .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .reveal {
+      opacity: 1;
+      transform: none;
+    }
+    .hero .band-inner {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* leave room for the depth rail on the right */
+  @media (min-width: 900px) {
+    .band {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .band {
+      min-height: 120svh;
+      padding-block: var(--space-9);
+    }
+    .band:not(.hero) {
+      contain-intrinsic-size: auto 120svh;
+    }
+    .hero {
+      min-height: 150svh;
+      padding-block: 0;
+    }
+    .align-end .band-inner {
+      justify-items: start;
+      text-align: left;
+    }
+  }
+
+  /* interactive 3D object: beside the copy on wide screens, below it on phones */
+  .model-stage {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    height: min(46svh, 26rem);
+    margin: 0;
+    border-radius: 24px;
+    cursor: grab;
+    touch-action: pan-y;
+    opacity: 0;
+    transition: opacity 900ms var(--ease-out);
+  }
+  .model-stage.is-ready {
+    opacity: 1;
+  }
+  .model-stage.is-failed {
+    display: none;
+  }
+  .model-stage.is-dragging {
+    cursor: grabbing;
+  }
+  .model-stage:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 4px;
+  }
+  .model-stage :global(canvas) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .model-hint {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-2);
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    pointer-events: none;
+  }
+  @media (min-width: 1000px) {
+    /* the copy keeps the standard gaps of every chapter and sits centred beside the model:
+       the model spans all rows, the two 1fr rows around the copy take up its extra height
+       (without them the model's height was shared out between the copy's rows) */
+    .has-model .band-inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+      grid-template-rows: 1fr repeat(5, auto) 1fr;
+      column-gap: var(--space-8);
+    }
+    .has-model .band-inner > :not(.model-stage) {
+      grid-column: 1;
+    }
+    /* fills the first 1fr row, so the copy flows in order from the second */
+    .has-model .band-inner::before {
+      content: '';
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .has-model .model-stage {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      align-self: center;
+      height: min(70svh, 36rem);
+    }
+  }
+
+  /* the over-under photo: scrolling pans it down past the waterline as it gives way to the
+     water below (the WebGL scene): the same "breaking the surface" beat, on a real photograph */
+  .hero-photo {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: var(--photo) center / cover no-repeat;
+    /* it keeps panning while it fades (breach 0.5 → 1, i.e. 4 → 8 m); the first clip then
+       fades in over the same distance, rising as it comes (Backdrop.tsx, SPAN.breach) */
+    background-position: 50%
+      calc((var(--photo-from) + var(--breach, 0) * (1 - var(--photo-from))) * 100%);
+    opacity: clamp(0, calc((1 - var(--breach, 0)) * 2), 1);
+  }
+  /* portrait screens: 'cover' fits the photo to the screen's height exactly, leaving nothing to
+     pan through; a taller photo gives the descent room to move (photo is 1366 × 1600) */
+  @media (max-aspect-ratio: 1366/1600) {
+    .hero-photo {
+      background-size: auto 130%;
+    }
+  }
+  /* on the photo the title clears out before the faces scroll up under it */
+  .hero:has(.hero-photo) .band-inner {
+    opacity: clamp(0, calc(1 - var(--breach, 0) * 4), 1);
+  }
+  /* 'scroll': no fade. The photo sits at the top of the surface band and leaves with the page,
+     the title with it, revealing the water underneath; its lower edge melts into that water */
+  .hero-photo.exit-scroll {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 100svh;
+    background-position: 50% calc(var(--photo-from) * 100%);
+    opacity: 1;
+    -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, #000 82%, transparent);
+  }
+  .hero:has(.exit-scroll) .band-inner {
+    position: relative;
+    transform: none;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-photo {
+      position: absolute;
+      background-position: 50% 30%;
+      opacity: 1;
+    }
+  }
+</style>

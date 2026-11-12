@@ -1,0 +1,162 @@
+---
+/**
+ * The scroll space between two chapters where a cinematic transition plays.
+ * The stage is sticky (native pinning, no layout-shifting pin spacers); depth keeps flowing
+ * through it, and GSAP scrubs the DOM part of the transition (see DepthJourney.astro).
+ * Purely presentational (it repeats the next chapter's title), so it is hidden from assistive tech.
+ */
+import type { JourneySection } from '@/data/journey';
+import { interludeStart } from '../cinematics';
+
+/** `to`: the transition into a chapter; `after`: a chapter's outro, played before the footer */
+type Props = { to: JourneySection; after?: never } | { after: JourneySection; to?: never };
+const { to, after } = Astro.props;
+const kind = to ? to.transition! : after!.outro!;
+const chars = to ? Array.from(to.eyebrow.split('·').at(-1)!.trim()) : [];
+const id = to ? `to-${to.id}` : `after-${after!.id}`;
+const depthStart = to ? interludeStart(to) : after!.depthEnd;
+const chapter = (to ?? after)!.id;
+/** seconds the pinned part plays for (autoplay.ts): about 1 s out, a short hold, 1 s in;
+    the torch outro carries two lines of text, so it gets longer */
+const duration = kind === 'torch' ? 3.6 : 2.4;
+/** the torch outro waits on each of its lines until the visitor scrolls on (see DepthJourney's
+    torch timeline: line 1 is fully in by 0.22, line 2 by 0.74) */
+const holds = kind === 'torch' ? '0.36,0.82' : undefined;
+---
+
+<div
+  class={`interlude interlude-${kind}`}
+  id={id}
+  data-depth-start={depthStart}
+  data-chapter={chapter}
+  data-duration={duration}
+  data-holds={holds}
+  aria-hidden="true"
+>
+  <div class="stage">
+    {kind === 'card' && (
+      <>
+        <div class="bar bar-top" />
+        <div class="bar bar-bottom" />
+        <div class="card">
+          <span class="card-meta card-num">Chapter {to!.chapter}</span>
+          <span class="card-title">
+            {chars.map((ch) => (
+              <span class="ch">{ch === ' ' ? ' ' : ch}</span>
+            ))}
+          </span>
+          <span class="card-meta card-depth">{to!.depthStart} m</span>
+        </div>
+      </>
+    )}
+    {kind === 'torch' && (
+      <div class="torch-lines">
+        <p class="torch-line line-1">Down here, daylight is gone.</p>
+        <p class="torch-line line-2">The only light is the one you carry.</p>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .interlude {
+    position: relative;
+    z-index: 3;
+    height: 170svh;
+    pointer-events: none;
+  }
+  .interlude-torch {
+    height: 260svh;
+  }
+
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  /* letterbox bars; the default (no JS) state is "open" */
+  .bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 13svh;
+    background: #000;
+  }
+  /* parked just outside the frame (the no-JS state is "open") */
+  .bar-top {
+    top: 0;
+    transform: translateY(-101%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+  .bar-bottom {
+    bottom: 0;
+    transform: translateY(101%);
+  }
+
+  .card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+    padding: var(--space-7) var(--space-8);
+    text-align: center;
+    color: var(--ink);
+  }
+  .card-meta {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .card-title {
+    display: flex;
+    overflow: hidden;
+    padding-block: 0.08em;
+    font-family: var(--font-display);
+    font-size: var(--step-6);
+    line-height: 1;
+  }
+  .ch {
+    display: inline-block;
+  }
+
+  .torch-lines {
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+  .torch-line {
+    grid-area: 1 / 1;
+    max-width: 22ch;
+    padding-inline: var(--gutter);
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .line-1 {
+    opacity: 0;
+  }
+  .line-2 {
+    color: var(--torch);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .interlude,
+    .interlude-torch {
+      height: auto;
+    }
+    .stage {
+      position: relative;
+      height: 60svh;
+    }
+    .line-1 {
+      display: none;
+    }
+  }
+</style>

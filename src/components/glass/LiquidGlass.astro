@@ -1,0 +1,46 @@
+---
+/**
+ * Shared pieces of the liquid glass material (see src/styles/glass.css):
+ * - an SVG displacement filter that bends the backdrop near the edges. Chromium only:
+ *   other engines don't render backdrop-filter: url(), so they keep plain frosted glass.
+ */
+const map = `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><defs><linearGradient id='x'><stop offset='0' stop-color='#f00'/><stop offset='1' stop-color='#000'/></linearGradient><linearGradient id='y' x2='0' y2='1'><stop offset='0' stop-color='#0f0'/><stop offset='1' stop-color='#000'/></linearGradient><filter id='b'><feGaussianBlur stdDeviation='14'/></filter></defs><rect width='256' height='256' fill='#000'/><rect width='256' height='256' fill='url(#x)'/><rect width='256' height='256' fill='url(#y)' style='mix-blend-mode:screen'/><rect x='34' y='34' width='188' height='188' rx='60' fill='rgb(128,128,0)' filter='url(#b)'/></svg>`;
+const href = `data:image/svg+xml;utf8,${encodeURIComponent(map)}`;
+---
+
+<svg class="lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <filter id="lg-refract" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feImage
+      href={href}
+      x="0"
+      y="0"
+      width="100%"
+      height="100%"
+      preserveAspectRatio="none"
+      result="map"
+    ></feImage>
+    <feDisplacementMap
+      in="SourceGraphic"
+      in2="map"
+      scale="22"
+      xChannelSelector="R"
+      yChannelSelector="G"
+    ></feDisplacementMap>
+  </filter>
+</svg>
+
+<script>
+  const html = document.documentElement;
+  const brands = (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } })
+    .userAgentData?.brands;
+  if (brands?.some((b) => /Chromium/i.test(b.brand))) html.classList.add('lg-refract');
+</script>
+
+<style>
+  .lg-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

@@ -1,0 +1,133 @@
+---
+/**
+ * EN | TR language switch. Turkish isn't published yet, so TR doesn't navigate: it explains
+ * itself instead ("Türkçe yakında"). When /tr pages exist, turn TR into a link to the same
+ * page under /tr (and add hreflang alternates in SeoHead).
+ */
+import { t, defaultLocale } from '@/i18n';
+
+interface Props {
+  /** bar: in the nav capsule; sheet: in the mobile menu; rail: its own capsule above the depth rail */
+  variant?: 'bar' | 'sheet' | 'rail';
+}
+const { variant = 'bar' } = Astro.props;
+const s = t();
+const current = defaultLocale;
+---
+
+<div
+  class:list={['lang', `lang-${variant}`, { lg: variant === 'rail' }]}
+  role="group"
+  aria-label={s.a11y.language}
+>
+  <a class="opt" href="/" lang="en" aria-current={current === 'en' ? 'true' : undefined}>
+    EN
+  </a>
+  <button class="opt soon" type="button" lang="tr" aria-describedby={`lang-soon-${variant}`}>
+    TR
+  </button>
+  <span class="soon-note lg lg-dark" id={`lang-soon-${variant}`} role="tooltip" lang="tr">
+    Türkçe yakında
+  </span>
+</div>
+
+<script>
+  // touch: tapping TR shows the note briefly (hover/focus cover pointer and keyboard)
+  document.querySelectorAll<HTMLElement>('.lang .soon').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lang = btn.closest('.lang');
+      lang?.classList.add('show-soon');
+      setTimeout(() => lang?.classList.remove('show-soon'), 1800);
+    });
+  });
+</script>
+
+<style>
+  .lang {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    /* inside the glass capsule: a fill, not a nested backdrop */
+    background: rgb(255 255 255 / 0.06);
+    box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 0.14);
+  }
+  .opt {
+    min-width: 34px;
+    padding: 5px 9px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    font: inherit;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+  }
+  .opt:hover,
+  .opt:focus-visible {
+    opacity: 1;
+  }
+  .opt[aria-current] {
+    opacity: 1;
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  .soon-note {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: var(--step--1);
+    white-space: nowrap;
+    color: var(--ink);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+  }
+  .soon:hover ~ .soon-note,
+  .soon:focus-visible ~ .soon-note,
+  .show-soon .soon-note {
+    opacity: 1;
+    transform: none;
+  }
+
+  .lang-sheet {
+    margin: var(--space-3) var(--space-4) var(--space-2);
+  }
+  .lang-sheet .opt {
+    font-size: 0.8rem;
+    padding: 8px 14px;
+  }
+  .lang-sheet .soon-note {
+    top: 50%;
+    right: auto;
+    left: calc(100% + 10px);
+    transform: translate(-4px, -50%);
+  }
+  .lang-sheet .soon:hover ~ .soon-note,
+  .lang-sheet .soon:focus-visible ~ .soon-note,
+  .lang-sheet.show-soon .soon-note {
+    transform: translate(0, -50%);
+  }
+
+  /* its own little glass capsule above the depth rail, centred on the nav's height */
+  .lang-rail {
+    height: 36px;
+    padding: 0 4px;
+    gap: 2px;
+    background: rgb(var(--lg-rgb) / var(--lg-alpha));
+  }
+</style>
