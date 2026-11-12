@@ -99,61 +99,71 @@ const fallbackBg =
 
     {s.items && (
       <SliderWrap {...(slider ? { class: 'slider-wrap', 'data-slider-wrap': '' } : {})}>
-      {slider && (
-        <button class="slider-btn prev" type="button" aria-label="Previous" data-slider-prev hidden>
-          <svg viewBox="0 0 24 64" aria-hidden="true"><path d="M18 4 6 32l12 28" /></svg>
-        </button>
-      )}
-      <ul
-        class:list={[
-          'items',
-          {
-            timeline: s.id === 'about',
-            pathways: s.id === 'education' || s.id === 'exploration',
-            projects: s.id === 'research',
-            slider: s.id === 'education',
-          },
-        ]}
-        tabindex={slider ? 0 : undefined}
-        aria-label={slider ? `${s.title}, scroll sideways for more` : undefined}
-        data-slider={slider ? '' : undefined}
-      >
-        {s.items.map((item) => (
-          <li
-            class:list={[
-              'item',
-              { todo: item.todo, lg: s.id !== 'about', 'lg-dark': s.id !== 'about' },
-              item.tone && `tone-${item.tone}`,
-              item.wide && 'wide',
-            ]}
+        {slider && (
+          <button
+            class="slider-btn prev"
+            type="button"
+            aria-label="Previous"
+            data-slider-prev
+            hidden
           >
-            <span class="item-title">{item.title}</span>
-            {item.text && <span class="item-text">{item.text}</span>}
-            {(item.wide || item.arrow) && (
-              <span class="item-arrow" aria-hidden="true">
-                →
-              </span>
-            )}
-            {item.tag && <span class="item-tag">{item.tag}</span>}
-            {item.todo && <span class="item-todo">Copy pending</span>}
-            {item.tags && (
-              <ul
-                class="chips"
-                aria-label={`${item.title} ${s.id === 'education' ? 'courses' : 'projects'}`}
-              >
-                {item.tags.map((tag) => (
-                  <li class="chip">{tag}</li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
-      {slider && (
-        <button class="slider-btn next" type="button" aria-label="Next" data-slider-next hidden>
-          <svg viewBox="0 0 24 64" aria-hidden="true"><path d="M6 4l12 28L6 60" /></svg>
-        </button>
-      )}
+            <svg viewBox="0 0 24 64" aria-hidden="true">
+              <path d="M18 4 6 32l12 28" />
+            </svg>
+          </button>
+        )}
+        <ul
+          class:list={[
+            'items',
+            {
+              timeline: s.id === 'about',
+              pathways: s.id === 'education' || s.id === 'exploration',
+              projects: s.id === 'research',
+              slider: s.id === 'education',
+            },
+          ]}
+          tabindex={slider ? 0 : undefined}
+          aria-label={slider ? `${s.title}, scroll sideways for more` : undefined}
+          data-slider={slider ? '' : undefined}
+        >
+          {s.items.map((item) => (
+            <li
+              class:list={[
+                'item',
+                { todo: item.todo, lg: s.id !== 'about', 'lg-dark': s.id !== 'about' },
+                item.tone && `tone-${item.tone}`,
+                item.wide && 'wide',
+              ]}
+            >
+              <span class="item-title">{item.title}</span>
+              {item.text && <span class="item-text">{item.text}</span>}
+              {(item.wide || item.arrow) && (
+                <span class="item-arrow" aria-hidden="true">
+                  →
+                </span>
+              )}
+              {item.tag && <span class="item-tag">{item.tag}</span>}
+              {item.todo && <span class="item-todo">Copy pending</span>}
+              {item.tags && (
+                <ul
+                  class="chips"
+                  aria-label={`${item.title} ${s.id === 'education' ? 'courses' : 'projects'}`}
+                >
+                  {item.tags.map((tag) => (
+                    <li class="chip">{tag}</li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+        {slider && (
+          <button class="slider-btn next" type="button" aria-label="Next" data-slider-next hidden>
+            <svg viewBox="0 0 24 64" aria-hidden="true">
+              <path d="M6 4l12 28L6 60" />
+            </svg>
+          </button>
+        )}
       </SliderWrap>
     )}
 

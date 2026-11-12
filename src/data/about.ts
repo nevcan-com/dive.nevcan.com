@@ -154,9 +154,27 @@ export const gueCards = [
     expires: 'September 2027',
     photo: 'JP Bresser',
   },
-  { season: '2025–2026', slug: '2025-26', rating: 'Instructor', expires: 'September 2026', photo: 'L. Mirault' },
-  { season: '2024–2025', slug: '2024-25', rating: 'Instructor', expires: 'September 2025', photo: 'J. Mühlenhaus' },
-  { season: '2023–2024', slug: '2023-24', rating: 'Instructor', expires: 'September 2024', photo: 'J. Mühlenhaus' },
+  {
+    season: '2025–2026',
+    slug: '2025-26',
+    rating: 'Instructor',
+    expires: 'September 2026',
+    photo: 'L. Mirault',
+  },
+  {
+    season: '2024–2025',
+    slug: '2024-25',
+    rating: 'Instructor',
+    expires: 'September 2025',
+    photo: 'J. Mühlenhaus',
+  },
+  {
+    season: '2023–2024',
+    slug: '2023-24',
+    rating: 'Instructor',
+    expires: 'September 2024',
+    photo: 'J. Mühlenhaus',
+  },
 ];
 
 /** GUE instructor ratings are on the GUE card (GueCard) and the courses go on Education */

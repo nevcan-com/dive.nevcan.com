@@ -343,11 +343,7 @@ function Jelly({ spec, index, compact }: { spec: JellySpec; index: number; compa
     const p = cycle % 1;
     const stroke = Math.floor(cycle) + (1 - (1 - Math.min(1, p / 0.45)) ** 3);
     const climb = ((spec.y + stroke * STROKE + RANGE) % (2 * RANGE)) - RANGE;
-    g.position.set(
-      spec.x + Math.sin(t * 0.11 + index) * 0.5,
-      climb,
-      spec.z,
-    );
+    g.position.set(spec.x + Math.sin(t * 0.11 + index) * 0.5, climb, spec.z);
     g.rotation.z = Math.sin(t * 0.19 + index) * 0.14;
     g.rotation.x = Math.cos(t * 0.15 + index) * 0.12;
     halo.current?.quaternion.copy(camera.quaternion);
