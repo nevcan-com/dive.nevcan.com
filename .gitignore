@@ -3,9 +3,8 @@ dist/
 .astro/
 .vercel/
 
-# private working notes (kept locally, not published)
-TODO.md
-design/privacy-ga4.md
+# private notes (kept locally, not published)
+notes/
 
 # dependencies
 node_modules/

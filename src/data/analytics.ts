@@ -13,7 +13,7 @@ export const ANALYTICS = {
    * link and the privacy page keeps saying "No cookies". `astro dev` always shows the new state.
    * Turn on only together with `transferBasis` below.
    */
-  live: false,
+  live: true,
   /**
    * The KVKK Art. 9 basis for transferring analytics data abroad, as it is to appear on the
    * privacy page ("...on the basis of <this>."). The build fails while `live` is on and this is

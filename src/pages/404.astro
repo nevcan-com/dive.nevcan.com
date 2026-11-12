@@ -1,0 +1,36 @@
+---
+/** Page not found. GitHub Pages serves dist/404.html for any missing path. */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page not found" description="This page does not exist." noindex>
+  <section class="nf">
+    <p class="eyebrow">404</p>
+    <h1>Nothing down here.</h1>
+    <p>This page doesn't exist, or it moved. Time to surface.</p>
+    <a class="arrow-link" href="/">
+      Back to the surface{' '}
+      <span class="arrow" aria-hidden="true">
+        →
+      </span>
+    </a>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    max-width: 46rem;
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 2rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .nf > p:not(.eyebrow) {
+    color: rgb(232 244 248 / 0.88);
+  }
+</style>
