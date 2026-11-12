@@ -10,6 +10,7 @@ import { ANALYTICS, analyticsOn } from '@/data/analytics';
 
 const updated = '12 November 2026';
 const email = 'nev@gue.com';
+const phone = '+90 555 543 51 44';
 /** a visible placeholder in `astro dev` while analytics.ts has no transfer basis */
 const transferBasis = ANALYTICS.transferBasis ?? '[transfer basis]';
 ---
@@ -82,12 +83,33 @@ const transferBasis = ANALYTICS.transferBasis ?? '[transfer basis]';
       )}
     </section>
 
-    <section>
-      <h2>Who is responsible</h2>
+    <section id="legal">
+      <h2>Who runs this site</h2>
       <p>
-        Nevcan Uludaş is the data controller for this website under the Turkish Personal Data
+        This website is published by a natural person (site owner and content provider under Turkish
+        Law No. 5651; "tanıtıcı bilgiler"):
+      </p>
+      <dl class="owner">
+        <dt>Name</dt>
+        <dd>Nevcan Uludaş</dd>
+        <dt>Location</dt>
+        <dd>Istanbul, Türkiye</dd>
+        <dt>E-mail</dt>
+        <dd>
+          <a href={`mailto:${email}`}>{email}</a>
+        </dd>
+        <dt>Phone / WhatsApp</dt>
+        <dd>
+          <a href={`tel:${phone.replace(/\s/g, '')}`}>{phone}</a>
+        </dd>
+        <dt>Hosting provider</dt>
+        <dd>GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States</dd>
+      </dl>
+      <p>
+        Nevcan Uludaş is also the data controller for this website under the Turkish Personal Data
         Protection Law (KVKK, Law No. 6698) and, where applicable, the EU General Data Protection
-        Regulation (GDPR). Contact: <a href={`mailto:${email}`}>{email}</a>.
+        Regulation (GDPR). Courses are offered by him personally; bookings are made by e-mail, and
+        the terms and full contact details are sent to you before you book.
       </p>
     </section>
 
@@ -274,7 +296,30 @@ const transferBasis = ANALYTICS.transferBasis ?? '[transfer basis]';
     text-underline-offset: 0.2em;
     cursor: pointer;
   }
-  #analytics {
+  #analytics,
+  #legal {
     scroll-margin-top: var(--space-9);
+  }
+  .owner {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-2) var(--space-5);
+    margin: var(--space-4) 0;
+    color: rgb(232 244 248 / 0.88);
+  }
+  .owner dt {
+    color: var(--ink-muted);
+  }
+  .owner dd {
+    margin: 0;
+  }
+  @media (max-width: 480px) {
+    .owner {
+      grid-template-columns: 1fr;
+      row-gap: 0;
+    }
+    .owner dd {
+      margin-bottom: var(--space-3);
+    }
   }
 </style>
