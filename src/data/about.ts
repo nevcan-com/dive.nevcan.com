@@ -95,6 +95,9 @@ export const education = [
     degree: 'MA, Mediterranean Underwater Cultural Heritage Research',
     school: 'Akdeniz University',
     year: '2025–2027',
+    // confirmed by Nev 2026-11-13: this MA's thesis, in progress
+    // (TR: Akdeniz Amforalarının Yapay Zeka ile Tipolojik Analizi)
+    note: 'Thesis (in progress): “Typological Analysis of Mediterranean Amphorae Using Artificial Intelligence”',
   },
   {
     degree: 'BSc, Mining Engineering',
@@ -255,8 +258,5 @@ export const interests = [
 
 /*
  * Open items (ask Nev before adding):
- * - master's thesis (topic known, not on the page yet): "Typological Analysis of Mediterranean
- *   Amphorae Using Artificial Intelligence" (TR: Akdeniz Amforalarının Yapay Zeka ile Tipolojik
- *   Analizi); degree, university and year still to ask
  * (freediving / Ironman PBs get a page of their own elsewhere, not on dive.nevcan.com)
  */
