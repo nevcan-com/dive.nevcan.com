@@ -104,7 +104,15 @@ import {
             </h3>
             <ul class="list">
               {q.items.map((i) => (
-                <li>{i}</li>
+                <li>
+                  {/* the ★ of "2★" small and raised, like an exponent */}
+                  {i.split('★').map((part, k) => (
+                    <>
+                      {k > 0 && <span class="star">★</span>}
+                      {part}
+                    </>
+                  ))}
+                </li>
               ))}
             </ul>
           </div>
@@ -533,17 +541,24 @@ import {
     font-size: var(--step-2);
     line-height: 1.1;
   }
+  /* dots above the level: side by side, "Professional" didn't fit next to them and wrapped */
   .lang-level {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    row-gap: 4px;
-    gap: var(--space-2);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 4px;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-muted);
+  }
+  .star {
+    font-size: 0.6em;
+    line-height: 0;
+    vertical-align: 0.6em;
+    margin-left: 0.05em;
   }
   .dots {
     display: inline-flex;
