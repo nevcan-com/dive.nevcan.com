@@ -188,27 +188,17 @@ export const qualifications = [
   },
   {
     group: 'Rebreathers',
-    items: [
-      'JJ-CCR (original and GUE configuration)',
-      'Halcyon Symbios (chest-mount)',
-      'SF2 eCCR',
-      'Poseidon MKVI / Se7en',
-    ],
+    items: ['JJ-CCR (both conf.)', 'Halcyon Symbios', 'SF2 eCCR', 'Poseidon Se7en'],
   },
   {
     group: 'Instructor, other agencies',
-    items: [
-      'TSSF / CMAS 2★ Instructor (2015)',
-      'ProTec 2★ Instructor (2015)',
-      'SSI Professional, Open Water Instructor (2021)',
-      'Adaptive Diving Instructor',
-    ],
+    items: ['TSSF/CMAS 2★ Inst.', 'ProTec 2★ Instructor', 'SSI OWI', 'Adaptive Diving Inst.'],
   },
   {
     group: 'Diver, other agencies',
     items: [
-      'TSSF Guide Diver (2012)',
-      'TDI Advanced Trimix Diver (2021)',
+      'TSSF Guide Diver',
+      'TDI Adv. Trimix Diver',
       'AIDA 3 Freediver (2022)',
       'ILS / TSSF Gold Lifeguard (2011)',
     ],
