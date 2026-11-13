@@ -68,7 +68,7 @@ import {
 
     <section class="block">
       <h2>
-        <span class="eyebrow">Now</span>What I do
+        <span class="eyebrow">Experience</span>What I do
       </h2>
       <ul class="cards">
         {roles.map((r) => (
@@ -584,7 +584,7 @@ import {
   .panel p {
     color: rgb(232 244 248 / 0.85);
   }
-  /* four groups: two by two on wide screens, stacked on phones */
+  /* four groups: one row on wide screens, two by two on tablets, stacked on phones */
   .quals {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -593,6 +593,14 @@ import {
   @media (min-width: 760px) {
     .quals {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .quals {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .quals .panel {
+      padding: var(--space-5);
     }
   }
   .list {

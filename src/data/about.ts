@@ -12,7 +12,7 @@ export const GUE_SCHEDULE = 'https://gue.com/diver-training/gue-class-schedule?I
 /** nevcan.com, "Hello, I'm Nevcan" (lightly tightened, same facts) */
 export const intro = [
   'My diving journey started in 2008, with my first breath underwater at my university’s diving club. Back at the surface I said: “I will become an instructor too.” Three years later, I was one.',
-  'Following that path, I became the first GUE instructor in Türkiye, which drew me into education programmes for ocean conservation and into underwater exploration projects around the world.',
+  'Following that path, I became the first GUE instructor in Türkiye, which drew me into education programmes for marine conservation and into underwater exploration projects around the world.',
   'Besides teaching, I’m drawn to freediving, technical deep diving, mixed gases and closed-circuit rebreathers, and most of all, to caves.',
 ];
 
@@ -50,7 +50,7 @@ export const roles: {
     title: 'Scuba Instructor / Safety Supervisor',
     where: 'Deep Dive Dubai',
     href: 'https://www.deepdivedubai.com/',
-    note: 'the world’s deepest pool',
+    note: 'The world’s deepest pool',
     when: '2022–2024',
   },
   {

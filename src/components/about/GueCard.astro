@@ -1,7 +1,8 @@
 ---
 /**
- * Nev's GUE instructor card as a physical card: it tilts a little toward the cursor and turns
- * over when clicked (or Enter / Space). The season buttons below switch to earlier years' cards.
+ * Nev's GUE instructor card as a physical card. It lies photo side (the back) up; a click (or
+ * Enter / Space) turns it over to the details. It tilts a little toward the cursor, easing after
+ * it like dipnot.app's feature tiles. The season buttons switch to earlier years' cards.
  * Under reduced motion it doesn't tilt and turns over without the animation.
  */
 import { gueCards, GUE_RESUME } from '@/data/about';
@@ -17,23 +18,14 @@ const current = gueCards[0]!;
       class="card"
       type="button"
       aria-pressed="false"
-      aria-label={`${label(current)}. Turn it over`}
+      aria-label={`${label(current)}. Show the front`}
       data-card-button
     >
       <span class="tilt" data-tilt>
         <span class="flip">
+          {/* photo side up first; the details are on the face underneath */}
           <img
-            class="face front"
-            src={src(current.slug, 'front')}
-            alt={`${label(current)}, front: Nevcan Uludas, instructor #20397, ${current.rating}, expires ${current.expires}`}
-            width="511"
-            height="324"
-            loading="lazy"
-            decoding="async"
-            data-front
-          />
-          <img
-            class="face back"
+            class="face"
             src={src(current.slug, 'back')}
             alt={`${label(current)}, back (photo: ${current.photo})`}
             width="511"
@@ -41,6 +33,16 @@ const current = gueCards[0]!;
             loading="lazy"
             decoding="async"
             data-back
+          />
+          <img
+            class="face under"
+            src={src(current.slug, 'front')}
+            alt={`${label(current)}, front: Nevcan Uludas, instructor #20397, ${current.rating}, expires ${current.expires}`}
+            width="511"
+            height="324"
+            loading="lazy"
+            decoding="async"
+            data-front
           />
         </span>
         <span class="glare" aria-hidden="true"></span>
@@ -93,7 +95,8 @@ const current = gueCards[0]!;
     expires: string;
     photo: string;
   }
-  const MAX_TILT = 7; // degrees
+  const MAX_TILT = 4; // degrees at the card's edge
+  const EASE_S = 0.15; // how quickly the tilt catches up with the cursor (time constant)
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-gue-card]')) {
     const cards = JSON.parse(root.dataset.cards ?? '[]') as Card[];
@@ -106,33 +109,54 @@ const current = gueCards[0]!;
     let index = 0;
 
     const label = (c: Card) => `GUE ${c.rating.toLowerCase()} card ${c.season}`;
+    // flipped = the details side (the card's front) up
     const setFlipped = (on: boolean) => {
       flipped = on;
       root.classList.toggle('is-flipped', on);
       button.setAttribute('aria-pressed', String(on));
       button.setAttribute(
         'aria-label',
-        `${label(cards[index]!)}. ${on ? 'Turn it back' : 'Turn it over'}`,
+        `${label(cards[index]!)}. ${on ? 'Show the photo side' : 'Show the front'}`,
       );
     };
     button.addEventListener('click', () => setFlipped(!flipped));
 
-    // a slight tilt toward the cursor (mouse and pen only; touch just taps to turn it over)
+    // a slight tilt toward the cursor (mouse and pen only; touch just taps to turn it over).
+    // The tilt eases after the cursor every frame, so entering from an edge doesn't snap.
+    const target = { x: 0, y: 0 };
+    const now = { x: 0, y: 0 };
+    let frame = 0;
+    let last = 0;
+    const step = (t: number) => {
+      const dt = last ? Math.min((t - last) / 1000, 0.1) : 1 / 60;
+      last = t;
+      const k = 1 - Math.exp(-dt / EASE_S);
+      now.x += (target.x - now.x) * k;
+      now.y += (target.y - now.y) * k;
+      tilt.style.setProperty('--ry', `${(now.x * 2 * MAX_TILT).toFixed(3)}deg`);
+      tilt.style.setProperty('--rx', `${(-now.y * 2 * MAX_TILT).toFixed(3)}deg`);
+      tilt.style.setProperty('--gx', `${((now.x + 0.5) * 100).toFixed(1)}%`);
+      tilt.style.setProperty('--gy', `${((now.y + 0.5) * 100).toFixed(1)}%`);
+      const settled = Math.abs(target.x - now.x) < 0.001 && Math.abs(target.y - now.y) < 0.001;
+      frame = settled ? 0 : requestAnimationFrame(step);
+      if (settled) last = 0;
+    };
+    const run = () => {
+      if (!frame) frame = requestAnimationFrame(step);
+    };
     button.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'touch' || reduced.matches) return;
       const r = button.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      tilt.style.setProperty('--ry', `${(x * 2 * MAX_TILT).toFixed(2)}deg`);
-      tilt.style.setProperty('--rx', `${(-y * 2 * MAX_TILT).toFixed(2)}deg`);
-      tilt.style.setProperty('--gx', `${((x + 0.5) * 100).toFixed(1)}%`);
-      tilt.style.setProperty('--gy', `${((y + 0.5) * 100).toFixed(1)}%`);
+      target.x = Math.max(-0.5, Math.min(0.5, (e.clientX - r.left) / r.width - 0.5));
+      target.y = Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5));
       root.classList.add('is-tilting');
+      run();
     });
     button.addEventListener('pointerleave', () => {
-      tilt.style.setProperty('--rx', '0deg');
-      tilt.style.setProperty('--ry', '0deg');
+      target.x = 0;
+      target.y = 0;
       root.classList.remove('is-tilting');
+      run();
     });
 
     // earlier seasons
@@ -180,7 +204,6 @@ const current = gueCards[0]!;
     display: grid;
     gap: var(--space-2);
     justify-items: center;
-    perspective: 1100px;
   }
   .card {
     display: block;
@@ -198,6 +221,9 @@ const current = gueCards[0]!;
     outline: 2px solid var(--bio);
     outline-offset: 6px;
   }
+  /* the perspective sits in the card's own transform (as on dipnot.app's tiles): set on the
+     stage, it only reached the button, so the tilt and the turn looked flat, like a squash.
+     The script eases --rx / --ry every frame, so no CSS transition here. */
   .tilt {
     --rx: 0deg;
     --ry: 0deg;
@@ -206,11 +232,7 @@ const current = gueCards[0]!;
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
-    transform: rotateX(var(--rx)) rotateY(var(--ry));
-    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .is-tilting .tilt {
-    transition-duration: 0.12s;
+    transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry));
   }
   .flip {
     position: absolute;
@@ -240,7 +262,7 @@ const current = gueCards[0]!;
       0 18px 40px rgb(0 0 0 / 0.45),
       0 4px 10px rgb(0 0 0 / 0.3);
   }
-  .back {
+  .under {
     transform: rotateY(180deg);
   }
   /* a soft sheen that follows the cursor, like light on a laminated card */
@@ -334,7 +356,6 @@ const current = gueCards[0]!;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .tilt,
     .flip {
       transition: none;
     }
