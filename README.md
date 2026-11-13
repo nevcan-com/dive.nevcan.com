@@ -8,7 +8,7 @@ booking. Live at **[dive.nevcan.com](https://dive.nevcan.com)**. One of the nevc
 - [Astro 7](https://astro.build) (static output, islands) + TypeScript
 - React Three Fiber / three.js for the homepage depth journey (loaded only on capable devices)
 - GSAP ScrollTrigger for scroll-driven depth
-- Fonts self-hosted via Fontsource; no third-party requests before consent
+- Fonts self-hosted, subset to Latin + Turkish (`scripts/subset-fonts.py`); no third-party requests before consent
 - Hosting: GitHub Pages, deployed by GitHub Actions
 
 ## Development

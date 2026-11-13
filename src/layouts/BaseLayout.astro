@@ -1,12 +1,11 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter/wght.css';
-import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@/styles/fonts.css';
 import '@/styles/global.css';
 
-import serifLatin from '@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url';
-import serifLatinExt from '@fontsource/instrument-serif/files/instrument-serif-latin-ext-400-normal.woff2?url';
+// the two faces on first paint: body text (Inter; the consent banner, the LCP on a first
+// visit) and the headings (Instrument Serif). Mono and the italic load when the CSS asks.
+import interVar from '@/assets/fonts/inter-var.woff2?url';
+import serifRegular from '@/assets/fonts/instrument-serif-400.woff2?url';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import SiteNav from '@/components/nav/SiteNav.astro';
 import SiteFooter from '@/components/footer/SiteFooter.astro';
@@ -39,8 +38,8 @@ const s = t(locale);
       document.documentElement.classList.add('js');
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={serifLatinExt} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interVar} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={serifRegular} as="font" type="font/woff2" crossorigin />
     <SeoHead {...props} />
     <slot name="head" />
   </head>

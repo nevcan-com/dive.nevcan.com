@@ -62,8 +62,9 @@ Procedural (`src/components/journey/scene/Jellyfish.tsx`). No model files.
 
 ## Fonts
 
-Self-hosted via Fontsource, all under the SIL Open Font License 1.1:
-Instrument Serif, Inter, JetBrains Mono.
+Self-hosted, all under the SIL Open Font License 1.1: Instrument Serif, Inter, JetBrains Mono.
+Sources: google/fonts (pinned commit in `scripts/subset-fonts.py`), subset to Latin + Turkish
+(Inter's optical size pinned to 14, weights 400–700) into `src/assets/fonts/`.
 
 ## Logos
 
