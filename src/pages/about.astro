@@ -98,7 +98,10 @@ import {
       <div class="quals">
         {qualifications.map((q) => (
           <div class="panel lg lg-dark">
-            <h3>{q.group}</h3>
+            <h3>
+              {q.group}
+              {q.sub && <span class="h3-sub">{q.sub}</span>}
+            </h3>
             <ul class="list">
               {q.items.map((i) => (
                 <li>{i}</li>
@@ -434,6 +437,15 @@ import {
     font-family: var(--font-display);
     font-size: var(--step-2);
     font-weight: 400;
+  }
+  /* "other agencies" under a qualification group's title: grey, smaller, a subtitle */
+  .h3-sub {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: var(--font-text);
+    font-size: var(--step--1);
+    line-height: 1.3;
+    color: var(--ink-muted);
   }
   .sub {
     margin: var(--space-6) 0 var(--space-3);

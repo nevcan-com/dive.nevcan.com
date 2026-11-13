@@ -181,7 +181,7 @@ export const gueCards = [
 ];
 
 /** GUE instructor ratings are on the GUE card (GueCard) and the courses go on Education */
-export const qualifications = [
+export const qualifications: { group: string; sub?: string; items: string[] }[] = [
   {
     group: 'GUE Diver',
     items: ['Technical 1', 'CCR 1 & 2', 'Cave 1 & 2', 'Photogrammetry'],
@@ -191,16 +191,23 @@ export const qualifications = [
     items: ['JJ-CCR (both conf.)', 'Halcyon Symbios', 'SF2 eCCR', 'Poseidon Se7en'],
   },
   {
-    group: 'Instructor, other agencies',
-    items: ['TSSF/CMAS 2★ Inst.', 'ProTec 2★ Instructor', 'SSI OWI', 'Adaptive Diving Inst.'],
+    group: 'Instructor',
+    sub: 'other agencies',
+    items: [
+      'TSSF/CMAS 2★ Inst.',
+      'ProTec 2★ Instructor',
+      'SSI OW Instructor',
+      'Adaptive Diving Inst.',
+    ],
   },
   {
-    group: 'Diver, other agencies',
+    group: 'Diver',
+    sub: 'other agencies',
     items: [
       'TSSF Guide Diver',
       'TDI Adv. Trimix Diver',
-      'AIDA 3 Freediver (2022)',
-      'ILS / TSSF Gold Lifeguard (2011)',
+      'AIDA 3 Freediver',
+      'ILS/TSSF Gold Lifeguard',
     ],
   },
 ];
