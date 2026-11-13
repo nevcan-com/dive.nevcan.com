@@ -234,13 +234,21 @@ export const community = [
 
 export const ambassador = ['Halcyon', 'SUEX', 'Shearwater', 'Big Blue Dive Lights'];
 
-export const publications = [
+/** `kind` picks the icon in front: a video, or course material (a book) */
+export const publications: {
+  kind: 'video' | 'book';
+  title: string;
+  where: string;
+  href?: string;
+  year?: string;
+}[] = [
   {
+    kind: 'video',
     title: 'Doubles Set Up (Turkish, EN/TR subtitles)',
     where: 'GUE.tv',
     href: 'https://gue.tv/programs/doubles-set-up-turkish?via=nev',
   },
-  { title: 'GUE Gas Blender, content developer', where: 'GUE', year: '2025' },
+  { kind: 'book', title: 'GUE Gas Blender, content developer', where: 'GUE', year: '2025' },
 ];
 
 export const interests = [

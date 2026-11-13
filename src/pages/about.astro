@@ -189,7 +189,22 @@ import {
         </h2>
         <ul class="rows">
           {publications.map((p) => (
-            <li>
+            <li class="pub">
+              <span class="pub-icon" aria-hidden="true">
+                {p.kind === 'video' ? (
+                  /* a screen with a play button */
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2.5" y="4.5" width="19" height="15" rx="3" />
+                    <path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" stroke-linejoin="round" />
+                  </svg>
+                ) : (
+                  /* an open book */
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 6.5C10 5 7 4.5 3 5v13c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5z" />
+                    <path d="M12 6.5v13" />
+                  </svg>
+                )}
+              </span>
               <span class="row-main">
                 {p.href ? (
                   <a
@@ -688,6 +703,35 @@ import {
   .row-note {
     font-size: var(--step--1);
     color: var(--ink-muted);
+  }
+  /* publications: a small icon in front of each (video / book), the text beside it */
+  .rows li.pub {
+    grid-template-columns: auto 1fr;
+    column-gap: var(--space-3);
+    align-items: center;
+  }
+  .pub > :not(.pub-icon) {
+    grid-column: 2;
+  }
+  .pub-icon {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.04);
+    color: var(--bio);
+  }
+  .pub-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .cta {
