@@ -1,0 +1,450 @@
+---
+/**
+ * Exploration: the three fields (cave, wreck, archaeology) and their projects, the featured
+ * project, what Nev brings to a team, and an invitation. Data: src/data/exploration.ts; project
+ * pages: src/content/exploration/ (/exploration/<slug>). Nothing here is invented.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageBanner from '@/components/layout/PageBanner.astro';
+import {
+  intro,
+  numbers,
+  fields,
+  capabilities,
+  workWith,
+  upcomingProjects,
+  GUE_RESUME,
+} from '@/data/exploration';
+
+const projects = await getCollection('exploration');
+const bySlug = new Map(projects.map((p) => [p.id, p]));
+/** the project with a page, shown large (the first one for now) */
+const featured = projects.find((p) => p.data.field === 'archaeology');
+---
+
+<BaseLayout
+  title="Exploration"
+  description="Cave, wreck and underwater archaeology projects with Nevcan Uludaş: technical and rebreather diving, survey and documentation."
+>
+  <PageBanner
+    src="/media/exploration-cave.webp"
+    width={1280}
+    height={720}
+    position="50% 40%"
+    bannerHeight="clamp(22rem, 64svh, 40rem)"
+    credit="Footage: Ricardo Constantino"
+  />
+  <article class="page">
+    <header class="head">
+      <p class="eyebrow">Exploration</p>
+      <h1>Where the light runs out</h1>
+      <p class="lede">{intro}</p>
+    </header>
+
+    <ul class="numbers" aria-label="Exploration in numbers">
+      {numbers.map((n) => (
+        <li class="number lg lg-dark">
+          <span class="number-value">{n.value}</span>
+          <span class="number-label">{n.label}</span>
+        </li>
+      ))}
+    </ul>
+
+    {featured && (
+      <section class="block" aria-labelledby="featured-h">
+        <h2 id="featured-h">
+          <span class="eyebrow">Featured project</span>
+          {featured.data.title}
+        </h2>
+        <a class="feature lg lg-dark lg-press tone-mint" href={`/exploration/${featured.id}`}>
+          <span class="feature-field">Archaeology</span>
+          {featured.data.subtitle && <span class="feature-sub">{featured.data.subtitle}</span>}
+          <span class="feature-text">{featured.data.summary}</span>
+          <span class="feature-sites">
+            {featured.data.sites.map((s) => (
+              <span class="chip">
+                {s.name} · {s.year}
+              </span>
+            ))}
+          </span>
+          <span class="arrow-link feature-more">
+            Project page{' '}
+            <span class="arrow" aria-hidden="true">
+              →
+            </span>
+          </span>
+        </a>
+      </section>
+    )}
+
+    <section class="block" aria-labelledby="fields-h">
+      <h2 id="fields-h">
+        <span class="eyebrow">By discipline</span>Projects
+      </h2>
+      <ul class="fields">
+        {fields.map((f) => (
+          <li class={`field lg lg-dark tone-${f.tone}`}>
+            <h3 class="field-title">{f.title}</h3>
+            <p class="field-text">{f.text}</p>
+            <ul class="projects">
+              {f.projects.map((p) => {
+                const page = p.slug ? bySlug.get(p.slug) : undefined;
+                return (
+                  <li>
+                    {page ? (
+                      <a class="project has-page" href={`/exploration/${page.id}`}>
+                        <span class="project-name">{p.name}</span>
+                        {p.note && <span class="project-note">{p.note}</span>}
+                        <span class="arrow" aria-hidden="true">
+                          →
+                        </span>
+                      </a>
+                    ) : (
+                      <span class="project">
+                        <span class="project-name">{p.name}</span>
+                        <span class="project-note">{p.note ?? 'Project page coming'}</span>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    {upcomingProjects.length > 0 && (
+      <section class="block" aria-labelledby="next-h">
+        <h2 id="next-h">
+          <span class="eyebrow">In planning</span>Next projects
+        </h2>
+        <ul class="caps">
+          {upcomingProjects.map((p) => (
+            <li class="cap lg lg-dark">
+              <h3 class="cap-title">{p.name}</h3>
+              <p>{p.text}</p>
+              {p.when && <p class="cap-when">{p.when}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="block" aria-labelledby="caps-h">
+      <h2 id="caps-h">
+        <span class="eyebrow">On a team</span>What I bring to a project
+      </h2>
+      <ul class="caps">
+        {capabilities.map((c) => (
+          <li class="cap lg lg-dark">
+            <h3 class="cap-title">{c.title}</h3>
+            <p>{c.text}</p>
+            {c.credentials && <p class="cap-cred">{c.credentials}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="cta panel lg lg-dark">
+      <h2>Planning a project?</h2>
+      <p>{workWith}</p>
+      <div class="cta-links">
+        <a class="btn" href={`mailto:nev@gue.com?subject=${encodeURIComponent('Project')}`}>
+          Write about your project →
+        </a>
+        <a class="link" href={GUE_RESUME} target="_blank" rel="noopener">
+          My GUE résumé
+        </a>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    display: grid;
+    gap: var(--space-9);
+    max-width: var(--content-max);
+    margin: clamp(-13rem, -20svh, -8rem) auto 0;
+    padding: 0 var(--gutter) var(--space-10);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  a {
+    color: var(--bio);
+    text-decoration: none;
+  }
+  .tone-mint {
+    --tone: 111 247 224;
+  }
+  .tone-amber {
+    --tone: 255 196 107;
+  }
+  .tone-violet {
+    --tone: 196 166 255;
+  }
+  .eyebrow {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--bio);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 46rem;
+    text-shadow: 0 2px 24px rgb(1 8 16 / 0.6);
+  }
+  .head .eyebrow {
+    margin: 0;
+  }
+  h1 {
+    font-size: var(--step-6);
+    line-height: 1;
+  }
+  .lede {
+    font-size: var(--step-0);
+    line-height: var(--leading-body);
+    color: rgb(232 244 248 / 0.88);
+  }
+  h2 {
+    font-size: var(--step-4);
+    line-height: 1.05;
+  }
+  .block {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: calc(-1 * var(--space-5)) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 760px) {
+    .numbers {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .number {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-5);
+    border-radius: 20px;
+  }
+  .number-value {
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    line-height: 1;
+  }
+  .number-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* the featured project: one large card */
+  .feature {
+    display: grid;
+    gap: var(--space-4);
+    padding: clamp(var(--space-6), 4vw, var(--space-8));
+    border-radius: 28px;
+    color: var(--ink);
+    box-shadow: inset 0 2px 0 rgb(var(--tone) / 0.6);
+  }
+  .feature-field {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: rgb(var(--tone));
+  }
+  .feature-sub {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.15;
+  }
+  .feature-text {
+    max-width: var(--measure);
+    color: rgb(232 244 248 / 0.85);
+  }
+  .feature-sites {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chip {
+    padding: 0.3em 0.85em;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    color: rgb(var(--tone));
+    background: rgb(var(--tone) / 0.1);
+    border: 1px solid rgb(var(--tone) / 0.3);
+  }
+  .feature-more {
+    justify-self: start;
+    font-size: var(--step--1);
+  }
+  .feature:hover .feature-more {
+    background-size: 100% 1px;
+  }
+  .feature:hover .feature-more .arrow {
+    transform: translateX(4px);
+  }
+
+  /* fields: three cards, each listing its projects */
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .field {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding: var(--space-6);
+    border-radius: 24px;
+    box-shadow: inset 0 2px 0 rgb(var(--tone) / 0.55);
+  }
+  .field-title {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1;
+    color: rgb(var(--tone));
+  }
+  .field-text {
+    color: rgb(232 244 248 / 0.8);
+  }
+  .projects {
+    display: grid;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .projects li {
+    border-top: 1px solid var(--glass-border);
+  }
+  .project {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px var(--space-3);
+    padding-block: var(--space-3);
+    color: var(--ink);
+  }
+  .project-name {
+    font-size: var(--step-0);
+  }
+  .project-note {
+    grid-column: 1;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+  }
+  .project .arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    color: rgb(var(--tone));
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .has-page:hover .project-name {
+    color: rgb(var(--tone));
+  }
+  .has-page:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  .caps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border-radius: 20px;
+  }
+  .cap-title {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 400;
+  }
+  /* the credentials behind a competence: a quiet line at the foot of the card */
+  .cap-cred {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--glass-border);
+    font-family: var(--font-mono);
+    font-size: 0.66rem !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bio) !important;
+  }
+  .cap p {
+    font-size: var(--step--1);
+    color: rgb(232 244 248 / 0.8);
+  }
+  .cap-when {
+    font-family: var(--font-mono);
+    color: var(--ink-muted) !important;
+  }
+
+  .panel {
+    display: grid;
+    gap: var(--space-4);
+    border-radius: 24px;
+  }
+  .cta {
+    justify-items: start;
+    padding: var(--space-8);
+  }
+  .cta h2 {
+    margin: 0;
+  }
+  .cta p {
+    max-width: var(--measure);
+    color: rgb(232 244 248 / 0.85);
+  }
+  .cta-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .btn {
+    padding: 0.8rem 1.4rem;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    color: var(--ink-surface);
+    background: var(--bio);
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+  .link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

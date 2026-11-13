@@ -1,0 +1,963 @@
+---
+/**
+ * Education: first "where are you starting from?" (four paths, each with Nev's recommended
+ * course), then every course, searchable. Paths: src/data/education.ts; courses:
+ * src/content/courses/ (one page each, /education/<slug>). Nothing here is invented.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageBanner from '@/components/layout/PageBanner.astro';
+import UpcomingEvents from '@/components/footer/UpcomingEvents.astro';
+import CourseCard from '@/components/education/CourseCard.astro';
+import { getCourseMap, getCourses } from '@/components/education/courses';
+import { upcoming } from '@/data/events';
+import {
+  intro,
+  teachIn,
+  teachWhere,
+  paths,
+  pathways,
+  coaching,
+  beyondTechFund,
+  instructorCourses,
+  GUE_RESUME,
+  GUE_SCHEDULE,
+} from '@/data/education';
+
+const courses = await getCourses();
+const bySlug = await getCourseMap();
+const get = (slug: string) => {
+  const c = bySlug.get(slug);
+  if (!c) throw new Error(`education.ts names a course that doesn't exist: ${slug}`);
+  return c;
+};
+/** after Technical Fundamentals: GUE's Tech 1 and Cave 1 (gue.com), and CCR Fundamentals, which
+ * has its own page here */
+const afterTechFund = [
+  ...beyondTechFund,
+  { name: 'CCR Fundamentals', url: '/education/ccr-fundamentals' },
+];
+/** instructor training courses have no course page; they show under "Become an instructor" */
+const itc = upcoming.filter((e) => /^ITC\b/.test(e.title));
+---
+
+<BaseLayout
+  title="Education"
+  description="GUE courses with Nevcan Uludaş, GUE Instructor Trainer: Open Water Diver for new divers, Technical Fundamentals for divers coming to GUE, primers, DPV, Gas Blender and Master Diver. In English and Turkish."
+>
+  {/* banner: Nev in doubles on a DPV, the homepage Education chapter's frame. He sits in the
+     frame's top third, so the crop keeps the top. To do (issue #4): swap for the photo of Nev
+     holding a diver's arm once it's in source-media/. */}
+  <PageBanner
+    src="/media/education-dpv.webp"
+    width={1600}
+    height={900}
+    position="50% 0%"
+    bannerHeight="clamp(22rem, 64svh, 40rem)"
+    credit="Footage: Lütfü Tanrıöver"
+  />
+  <article class="page">
+    <header class="head">
+      <p class="eyebrow">Education</p>
+      <h1>Pathways</h1>
+      <p class="lede">{intro}</p>
+      <ul class="facts" aria-label="At a glance">
+        <li>
+          <span class="fact-k">Courses</span>
+          {courses.length}
+        </li>
+        <li>
+          <span class="fact-k">Taught in</span>
+          {teachIn.join(' · ')}
+        </li>
+        <li>
+          <span class="fact-k">Where</span>
+          {teachWhere}
+        </li>
+      </ul>
+      {/* GUE's logo (dark-background version, no motto), under its Brand Standards Guide:
+          on an even dark background, no shadow, with clear space around it */}
+      <p class="gue-mark">
+        <img
+          src="/media/gue-logo-dark.svg"
+          alt="Global Underwater Explorers"
+          width="72"
+          height="69"
+        />
+        <span>
+          <span class="gue-mark-k">GUE Instructor Trainer</span>
+          Every course on this page follows Global Underwater Explorers standards.
+        </span>
+      </p>
+    </header>
+
+    <section class="block picker" aria-labelledby="start-h" data-picker>
+      <h2 id="start-h">
+        <span class="eyebrow">Start here</span>Where are you starting from?
+      </h2>
+      {/* one liquid-glass console: the selector on top, a glass rule, then the chosen path.
+          The tabs only show with JavaScript; without it every path is listed in the console */}
+      <div class="console lg">
+        <div class="tabs" role="tablist" aria-labelledby="start-h">
+          {paths.map((p, i) => (
+            <button
+              class="tab"
+              type="button"
+              role="tab"
+              id={`tab-${p.id}`}
+              aria-controls={p.id}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              data-tab={p.id}
+            >
+              <span class="tab-n" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span class="tab-label">{p.label}</span>
+              <span class="tab-hint">{p.hint}</span>
+            </button>
+          ))}
+        </div>
+        <hr class="console-rule" />
+
+        {paths.map((p, i) => (
+          <div
+            class:list={['path', { 'is-active': i === 0 }]}
+            id={p.id}
+            role="tabpanel"
+            aria-labelledby={`tab-${p.id}`}
+            data-path={p.id}
+          >
+            <p class="path-for">{p.label}</p>
+            <h3 class="path-title">{p.title}</h3>
+            <p class="path-text">{p.text}</p>
+
+            {p.featured.length > 0 && (
+              <ul class:list={['featured', { two: p.featured.length > 1, equal: p.equalCards }]}>
+                {p.featured.map((f) => (
+                  <li>
+                    <CourseCard course={get(f.slug)} variant="featured" badge={f.badge} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {p.note && <p class="path-note">{p.note}</p>}
+
+            {p.others.length > 0 && (
+              <div class="others">
+                {p.othersLabel && <p class="others-label">{p.othersLabel}</p>}
+                <ul class="rows">
+                  {p.others.map((slug) => (
+                    <li>
+                      <CourseCard course={get(slug)} variant="row" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {p.id === 'gue' && (
+              <p class="path-note">
+                After Technical Fundamentals, GUE’s path goes on to{' '}
+                {afterTechFund.map((b, k) => (
+                  <>
+                    {k > 0 && (k === afterTechFund.length - 1 ? ' and ' : ', ')}
+                    {b.url.startsWith('/') ? (
+                      <a href={b.url}>{b.name}</a>
+                    ) : (
+                      <a href={b.url} target="_blank" rel="noopener">
+                        {b.name}
+                      </a>
+                    )}
+                  </>
+                ))}
+                .
+              </p>
+            )}
+
+            {p.id === 'pro' && (
+              <div class="pro">
+                <ul class="featured">
+                  {instructorCourses.map((c) => {
+                    const dates = itc.filter((e) => e.title.startsWith(c.match));
+                    return (
+                      <li class="itc lg lg-dark">
+                        <span class="itc-badge">Instructor training</span>
+                        <h4 class="itc-name">{c.name}</h4>
+                        <p class="itc-level">
+                          <span class="itc-k">Leads to</span>
+                          {c.rating}
+                        </p>
+                        <p class="itc-text">{c.text}</p>
+                        <span class="itc-facts">
+                          {dates.length ? (
+                            dates.map((e) => (
+                              <span class="itc-fact">
+                                {new Date(`${e.start}T12:00:00`).toLocaleDateString('en-GB', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}{' '}
+                                · {e.location}
+                              </span>
+                            ))
+                          ) : (
+                            <span class="itc-fact">New dates being planned</span>
+                          )}
+                        </span>
+                        <a class="arrow-link itc-more" href={`/education/itc/${c.slug}`}>
+                          Course details{' '}
+                          <span class="arrow" aria-hidden="true">
+                            →
+                          </span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p class="path-note">
+                  My GUE ratings are on my{' '}
+                  <a href={GUE_RESUME} target="_blank" rel="noopener">
+                    GUE instructor résumé
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="all-h" data-search-root>
+      <div class="all-head">
+        <h2 id="all-h">
+          <span class="eyebrow">Every course</span>All courses
+        </h2>
+        <label class="search lg lg-dark">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" />
+            <path d="M16 16l4.5 4.5" />
+          </svg>
+          <span class="visually-hidden">Search courses</span>
+          <input
+            type="search"
+            placeholder="Search: trimix, drysuit, DPV, AOWD…"
+            autocomplete="off"
+            spellcheck="false"
+            data-search
+          />
+        </label>
+      </div>
+      <p class="search-status" aria-live="polite" data-search-status></p>
+
+      {pathways.map((pw) => (
+        <div class={`group tone-${pw.tone}`} data-search-group>
+          <h3 class="group-title">
+            {pw.title}
+            <span class="group-text">{pw.text}</span>
+          </h3>
+          <ul class="tiles">
+            {courses
+              .filter((c) => c.data.pathway === pw.id)
+              .map((c) => (
+                <li data-search-item>
+                  <CourseCard course={c} variant="tile" />
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
+      <p class="empty" hidden data-search-empty>
+        No course matches that.{' '}
+        <a href={`mailto:nev@gue.com?subject=${encodeURIComponent('Course question')}`}>
+          Write to me
+        </a>
+        , and I’ll point you to the right one.
+      </p>
+    </section>
+
+    <section class="block split">
+      <div>
+        <h2>
+          <span class="eyebrow">Beyond courses</span>
+          {coaching.title}
+        </h2>
+        <p class="body">{coaching.text}</p>
+      </div>
+      <div>
+        <h2>
+          <span class="eyebrow">Calendar</span>Next dates
+        </h2>
+        <div class="panel lg lg-dark">
+          <UpcomingEvents events={upcoming} email="nev@gue.com" />
+        </div>
+        <p class="note">
+          GUE classes are also listed on my{' '}
+          <a href={GUE_SCHEDULE} target="_blank" rel="noopener">
+            GUE class schedule
+          </a>
+          .
+        </p>
+      </div>
+    </section>
+
+    <section class="cta panel lg lg-dark">
+      <h2>Not sure where you fit?</h2>
+      <p>
+        Every booking starts with a short conversation about your experience and goals. Write and
+        we’ll find the right course and a date.
+      </p>
+      <div class="cta-links">
+        <a class="btn" href="/booking">
+          Let’s plan a course →
+        </a>
+        <a class="link" href={`mailto:nev@gue.com?subject=${encodeURIComponent('Course request')}`}>
+          nev@gue.com
+        </a>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<script>
+  // the path picker: tabs with arrow keys; the choice lives in the URL hash (/education#certified)
+  for (const root of document.querySelectorAll<HTMLElement>('[data-picker]')) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-path]')];
+    const select = (id: string, focus = false) => {
+      for (const t of tabs) {
+        const on = t.dataset.tab === id;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      }
+      for (const p of panels) p.classList.toggle('is-active', p.dataset.path === id);
+    };
+    for (const t of tabs) {
+      t.addEventListener('click', () => {
+        select(t.dataset.tab!);
+        history.replaceState(null, '', `#${t.dataset.tab}`);
+      });
+      t.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(t);
+        const to =
+          e.key === 'ArrowRight' || e.key === 'ArrowDown'
+            ? (i + 1) % tabs.length
+            : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+              ? (i - 1 + tabs.length) % tabs.length
+              : e.key === 'Home'
+                ? 0
+                : e.key === 'End'
+                  ? tabs.length - 1
+                  : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        tabs[to].click();
+        tabs[to].focus();
+      });
+    }
+    const fromHash = () => {
+      const id = location.hash.slice(1);
+      if (!tabs.some((t) => t.dataset.tab === id)) return;
+      select(id);
+      root.scrollIntoView({ block: 'start' });
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+  }
+
+  // course search: every word must appear in a course's name, short form, summary or keywords
+  for (const root of document.querySelectorAll<HTMLElement>('[data-search-root]')) {
+    const input = root.querySelector<HTMLInputElement>('[data-search]')!;
+    const status = root.querySelector<HTMLElement>('[data-search-status]')!;
+    const empty = root.querySelector<HTMLElement>('[data-search-empty]')!;
+    const items = [...root.querySelectorAll<HTMLElement>('[data-search-item]')];
+    const groups = [...root.querySelectorAll<HTMLElement>('[data-search-group]')];
+    input.addEventListener('input', () => {
+      const words = input.value.toLowerCase().replace(/[-–]/g, ' ').split(/\s+/).filter(Boolean);
+      let shown = 0;
+      for (const li of items) {
+        const text = li
+          .querySelector<HTMLElement>('[data-course-search]')!
+          .dataset.courseSearch!.replace(/[-–]/g, ' ');
+        const hit = words.every((w) => text.includes(w));
+        li.hidden = !hit;
+        if (hit) shown++;
+      }
+      for (const g of groups) g.hidden = !g.querySelector('[data-search-item]:not([hidden])');
+      empty.hidden = shown > 0;
+      status.textContent = words.length
+        ? `${shown} ${shown === 1 ? 'course' : 'courses'} found`
+        : '';
+    });
+  }
+</script>
+
+<style>
+  .page {
+    position: relative;
+    display: grid;
+    gap: var(--space-9);
+    max-width: var(--content-max);
+    margin: clamp(-13rem, -20svh, -8rem) auto 0;
+    padding: 0 var(--gutter) var(--space-10);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  a {
+    color: var(--bio);
+    text-decoration: none;
+  }
+  p a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .eyebrow {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--bio);
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 46rem;
+    text-shadow: 0 2px 24px rgb(1 8 16 / 0.6);
+  }
+  .gue-mark {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+    font-size: var(--step--1);
+    color: rgb(232 244 248 / 0.8);
+    text-shadow: none;
+  }
+  .gue-mark img {
+    flex: none;
+    width: 72px;
+    height: auto;
+  }
+  .gue-mark-k {
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .head .eyebrow {
+    margin: 0;
+  }
+  h1 {
+    font-size: var(--step-6);
+    line-height: 1;
+  }
+  .lede {
+    font-size: var(--step-0);
+    line-height: var(--leading-body);
+    color: rgb(232 244 248 / 0.88);
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .facts li {
+    display: grid;
+    gap: 2px;
+  }
+  .fact-k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .block {
+    display: grid;
+    gap: var(--space-5);
+    scroll-margin-top: 6rem;
+  }
+  h2 {
+    font-size: var(--step-4);
+    line-height: 1.05;
+  }
+  .body,
+  .note {
+    color: rgb(232 244 248 / 0.8);
+  }
+  .note {
+    margin-top: var(--space-4);
+    font-size: var(--step--1);
+  }
+
+  /* the picker stands apart: open water above and below, and the whole choice inside one
+     liquid-glass console, larger and brighter-rimmed than the cards around it */
+  .picker {
+    margin-block: var(--space-6);
+  }
+  .console {
+    --lg-alpha: 0.05;
+    --lg-blur: 22px;
+    display: grid;
+    gap: var(--space-6);
+    padding: clamp(var(--space-3), 1.2vw, var(--space-4))
+      clamp(var(--space-3), 1.2vw, var(--space-4)) clamp(var(--space-6), 4vw, var(--space-8));
+    border-radius: 36px;
+    box-shadow:
+      inset 0 1px 0.5px rgb(255 255 255 / 0.3),
+      inset 0 0 0 1px rgb(255 255 255 / 0.12),
+      0 40px 100px -40px rgb(111 247 224 / 0.22),
+      0 24px 60px -24px rgb(0 0 0 / 0.6);
+  }
+  /* the paths sit inside the console's padding, the selector runs edge to edge in it */
+  .console > .path,
+  .console > .console-rule {
+    margin-inline: clamp(var(--space-3), 3vw, var(--space-7));
+  }
+  /* a glass rule: a line of light, brightest in the middle */
+  .console-rule {
+    display: none;
+    height: 1px;
+    border: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.28) 30%,
+      rgb(111 247 224 / 0.5) 50%,
+      rgb(255 255 255 / 0.28) 70%,
+      transparent
+    );
+    box-shadow: 0 0 12px rgb(111 247 224 / 0.25);
+  }
+  :global(html.js) .console-rule {
+    display: block;
+  }
+
+  /* the selector: one recessed track, four segments; the chosen one is lit glass */
+  .tabs {
+    display: none;
+  }
+  :global(html.js) .tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    border-radius: 28px;
+    background: rgb(1 8 16 / 0.45);
+    box-shadow:
+      inset 0 2px 8px rgb(0 0 0 / 0.45),
+      inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  }
+  /* phones: one segment per row, so the hints read on one or two lines */
+  @media (max-width: 599px) {
+    :global(html.js) .tabs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .tab {
+      padding: var(--space-3) var(--space-4);
+    }
+  }
+  @media (min-width: 900px) {
+    :global(html.js) .tabs {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .tab {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-3);
+    row-gap: 2px;
+    align-content: start;
+    padding: var(--space-4) var(--space-5);
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    color: rgb(232 244 248 / 0.72);
+    cursor: pointer;
+    transition:
+      background var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  .tab:hover {
+    color: var(--ink);
+    background: rgb(255 255 255 / 0.05);
+  }
+  .tab[aria-selected='true'] {
+    color: var(--ink);
+    background: linear-gradient(180deg, rgb(111 247 224 / 0.22), rgb(111 247 224 / 0.08));
+    box-shadow:
+      inset 0 1px 0.5px rgb(255 255 255 / 0.35),
+      inset 0 0 0 1px rgb(111 247 224 / 0.55),
+      0 8px 24px -8px rgb(111 247 224 / 0.35);
+  }
+  .tab:focus-visible {
+    outline: 2px solid var(--bio);
+    outline-offset: 2px;
+  }
+  .tab-n {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: 0.15rem;
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    color: var(--bio);
+    box-shadow: inset 0 0 0 1px rgb(111 247 224 / 0.4);
+    transition:
+      background var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out);
+  }
+  .tab[aria-selected='true'] .tab-n {
+    color: var(--ink-surface);
+    background: var(--bio);
+    box-shadow: none;
+  }
+  .tab-label {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    line-height: 1.15;
+  }
+  .tab-hint {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--ink-muted);
+  }
+  .tab[aria-selected='true'] .tab-hint {
+    color: rgb(232 244 248 / 0.8);
+  }
+
+  .path {
+    display: grid;
+    gap: var(--space-4);
+    scroll-margin-top: 6rem;
+  }
+  .path + .path {
+    margin-top: var(--space-8);
+  }
+  :global(html.js) .path {
+    margin-top: 0;
+  }
+  :global(html.js) .path:not(.is-active) {
+    display: none;
+  }
+  .path-for {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  :global(html.js) .path-for {
+    display: none;
+  }
+  .path-title {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1.05;
+  }
+  .path-text {
+    max-width: var(--measure);
+    font-size: var(--step-0);
+    color: rgb(232 244 248 / 0.85);
+  }
+  .path-note {
+    max-width: var(--measure);
+    font-size: var(--step--1);
+    color: rgb(232 244 248 / 0.75);
+  }
+  .featured {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 760px) {
+    .featured {
+      grid-template-columns: minmax(0, 40rem);
+    }
+    .featured.two {
+      grid-template-columns: 1.4fr 1fr;
+    }
+    /* two options side by side, neither the main one */
+    .featured.two.equal {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .others {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 48rem;
+  }
+  .others-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .rows {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rows li {
+    border-top: 1px solid var(--glass-border);
+  }
+  .rows li:last-child {
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .pro {
+    display: grid;
+    gap: var(--space-3);
+  }
+  /* instructor training has its own colour, a light blue (the glass tint's blue, brightened):
+     not the mint of the recreational courses, and never red, which reads as a warning */
+  .itc {
+    --pro: 130 205 255;
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding: var(--space-6);
+    border-radius: 24px;
+    box-shadow: inset 0 2px 0 rgb(var(--pro) / 0.6);
+  }
+  .itc-badge {
+    justify-self: start;
+    padding: 0.2em 0.7em;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-surface);
+    background: rgb(var(--pro));
+  }
+  .itc > * {
+    margin: 0;
+  }
+  .itc-name {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1.1;
+  }
+  /* the instructor level it leads to: the line people look for */
+  .itc-level {
+    padding-left: var(--space-4);
+    border-left: 2px solid rgb(var(--pro));
+    font-size: var(--step-1);
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .itc-k {
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .itc-text {
+    color: rgb(232 244 248 / 0.82);
+  }
+  .itc-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .itc-fact {
+    padding: 0.25em 0.75em;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    color: rgb(var(--pro));
+    background: rgb(var(--pro) / 0.1);
+    border: 1px solid rgb(var(--pro) / 0.28);
+  }
+  .itc-more {
+    justify-self: start;
+    color: rgb(var(--pro));
+    font-size: var(--step--1);
+  }
+  .path-note a {
+    white-space: nowrap;
+  }
+
+  /* all courses: a search box, then the pathways as groups of tiles */
+  .all-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: min(100%, 24rem);
+    padding: 0.2rem 1rem;
+    border-radius: var(--radius-pill);
+  }
+  .search:focus-within {
+    box-shadow: inset 0 0 0 1.5px var(--bio);
+  }
+  .search svg {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: var(--ink-muted);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.65rem 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--step--1);
+    color: var(--ink);
+    outline: none;
+  }
+  .search input::placeholder {
+    color: var(--ink-faint);
+  }
+  .search-status {
+    min-height: 1em;
+    margin-top: calc(-1 * var(--space-3));
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  .group {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .group + .group {
+    margin-top: var(--space-4);
+  }
+  .tone-mint {
+    --tone: 111 247 224;
+  }
+  .tone-amber {
+    --tone: 255 196 107;
+  }
+  .tone-violet {
+    --tone: 196 166 255;
+  }
+  .group-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    color: rgb(var(--tone));
+  }
+  .group-text {
+    font-family: var(--font-text);
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .empty {
+    color: rgb(232 244 248 / 0.8);
+  }
+
+  .split {
+    gap: var(--space-8);
+  }
+  @media (min-width: 900px) {
+    .split {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+  .split h2 {
+    margin-bottom: var(--space-4);
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding: var(--space-6);
+    border-radius: 24px;
+  }
+  .panel p {
+    color: rgb(232 244 248 / 0.85);
+  }
+
+  .cta {
+    justify-items: start;
+    gap: var(--space-4);
+    padding: var(--space-8);
+  }
+  .cta h2 {
+    margin: 0;
+  }
+  .cta p {
+    max-width: var(--measure);
+  }
+  .cta-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .btn {
+    padding: 0.8rem 1.4rem;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    color: var(--ink-surface);
+    background: var(--bio);
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+  .link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+</style>

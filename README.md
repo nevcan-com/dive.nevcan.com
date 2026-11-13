@@ -54,7 +54,26 @@ Pages are built as files (`build.format: 'file'`, e.g. `about.html`), so GitHub 
 - Models live in `public/models/` (see `CREDITS.md`); the shark and jellyfish are placed in
   `scene/Shark.tsx` and `scene/Jellyfish.tsx`.
 - Content collections (`exploration`, `conservation`, `courses`) are defined in
-  `src/content.config.ts`. They are empty until real, verified content is added.
+  `src/content.config.ts`. `exploration` and `conservation` are empty until real, verified
+  content is added.
+
+## Education and courses
+
+- `/education` asks where the visitor is starting from (new diver, certified elsewhere, GUE
+  diver, future instructor) and shows the recommended course for each; the paths are in
+  `src/data/education.ts`. Below them, every course, searchable.
+- Each course is one Markdown file in `src/content/courses/<slug>.md`, published at
+  `/education/<slug>`. Frontmatter facts (limits, prerequisites, topics, equipment) follow GUE's
+  Standards v10.4 (the section number is in `standards`); the body is Nev's text.
+- A course with `draft: true` is built but `noindex`, left out of the sitemap, and marked
+  "Draft". Set `draft: false` once Nev has approved the page. Add `fee` (Nev's instructor fee, in
+  euros) to show it; without it the page says "On request". The rest of the cost (GUE's
+  registration fee, travel, accommodation, shared instructor costs) is one rule for every course: `PRICING`
+  in `src/data/education.ts`. Give an event in `src/data/events.ts` a `course` slug
+  to list it on that course's page.
+- Instructor training courses (ITC) are in `instructorCourses` in `src/data/education.ts`, one
+  page each at `/education/itc/<slug>`; they are drafts (and out of the sitemap, see
+  `astro.config.mjs`) until Nev approves them.
 
 ## Analytics and privacy
 

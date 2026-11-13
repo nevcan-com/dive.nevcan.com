@@ -134,7 +134,7 @@ export const journey: JourneySection[] = [
         text: 'For divers who want to sharpen their skills.',
       },
     ],
-    cta: { label: 'Explore pathways', href: '/#education' },
+    cta: { label: 'Explore pathways', href: '/education' },
     align: 'end',
     // Nevcan's own footage: diver in doubles on a DPV
     clip: 'education-dpv',
@@ -168,11 +168,11 @@ export const journey: JourneySection[] = [
     lede: 'Cave, wreck and archaeology projects. Every dive, documented.',
     // one card per field, its projects as chips (same layout as Education's pathways)
     items: [
-      { title: 'Cave', tone: 'violet', tags: ['KarstDive: Western Taurus', 'KarstDive: Amanus'] },
-      { title: 'Wreck', tone: 'amber', tags: ['ProjectXplore: Gallipoli Wrecks'] },
+      { title: 'Cave', tone: 'violet', tags: ['KarstDive: Amanus', 'KarstDive: Western Taurus'] },
+      { title: 'Wreck', tone: 'amber', tags: ['Gallipoli Wrecks'] },
       { title: 'Archaeology', tone: 'mint', tags: ['Eastern Mediterranean Amphoras'] },
     ],
-    cta: { label: 'See the expeditions', href: '/#exploration' },
+    cta: { label: 'See the expeditions', href: '/exploration' },
     align: 'end',
     // Nevcan's own cave footage
     clip: 'exploration-cave',

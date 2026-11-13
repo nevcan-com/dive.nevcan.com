@@ -1,0 +1,532 @@
+---
+/**
+ * One exploration project (/exploration/<slug>), from src/content/exploration/<slug>.md. Every
+ * fact on the page carries its published source; Nev's role is in his own words. A draft is
+ * noindex, out of the sitemap, and marked as such.
+ */
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import YouTubeVideo from '@/components/layout/YouTubeVideo.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('exploration');
+  return all.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+interface Props {
+  project: CollectionEntry<'exploration'>;
+}
+const { project } = Astro.props;
+const d = project.data;
+/** list fields, defaulted here too: a dev server with an older content cache can miss new ones */
+const videos = d.videos ?? [];
+const wrecks = d.wrecks ?? [];
+const { Content } = await render(project);
+const FIELD = { cave: 'Cave', wreck: 'Wreck', archaeology: 'Archaeology' } as const;
+const TONE = { cave: 'violet', wreck: 'amber', archaeology: 'mint' } as const;
+const field = d.field ? FIELD[d.field] : 'Exploration';
+const tone = d.field ? TONE[d.field] : 'mint';
+---
+
+<BaseLayout title={d.title} description={d.summary} noindex={d.draft}>
+  <article class={`page tone-${tone}`}>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/exploration">Exploration</a>
+      <span aria-hidden="true">/</span>
+      <span>{field}</span>
+    </nav>
+
+    <header class="head">
+      <p class="eyebrow">
+        {field}
+        {d.draft && <span class="draft">Draft</span>}
+      </p>
+      <h1>{d.title}</h1>
+      {d.subtitle && <p class="subtitle">{d.subtitle}</p>}
+      <p class="lede">{d.summary}</p>
+      <dl class="meta">
+        {d.lead && (
+          <div>
+            <dt>{d.leadLabel ?? 'Led by'}</dt>
+            <dd>{d.lead}</dd>
+          </div>
+        )}
+        <div>
+          <dt>Where</dt>
+          <dd>{d.location}</dd>
+        </div>
+        {d.position && (
+          <div>
+            <dt>My role</dt>
+            <dd>{d.position}</dd>
+          </div>
+        )}
+      </dl>
+    </header>
+
+    <div class="layout">
+      <div class="main">
+        <section class="block prose">
+          <Content />
+        </section>
+
+        {videos.length > 0 && (
+          <section class="block">
+            <h2 class="small-h">On video</h2>
+            {videos.map((v) => (
+              <YouTubeVideo id={v.youtube} title={v.title} caption={v.caption} credit={v.credit} />
+            ))}
+          </section>
+        )}
+
+        {d.sites.length > 0 && (
+          <section class="block">
+            <h2>
+              <span class="eyebrow">{d.sitesEyebrow ?? 'Sites'}</span>
+              {d.sitesTitle ?? 'Where I dived with the team'}
+            </h2>
+            <ol class="sites">
+              {d.sites.map((s, i) => (
+                <li class="site lg lg-dark">
+                  <span class="site-n" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div class="site-body">
+                    <h3 class="site-name">{s.name}</h3>
+                    <p class="site-place">
+                      {s.place} · {s.year}
+                      {s.aka && <span class="site-aka">Also: {s.aka}</span>}
+                    </p>
+                    {s.facts.length > 0 && (
+                      <dl class="site-facts">
+                        {s.facts.map((f) => (
+                          <div>
+                            <dt>{f.k}</dt>
+                            <dd>{f.v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                    <p class="site-text">{s.text}</p>
+                    <ul class="sources">
+                      {s.sources.map((src) => (
+                        <li>
+                          <a href={src.url} target="_blank" rel="noopener">
+                            {src.title}
+                          </a>
+                          <span class="src-meta">
+                            {src.publisher}
+                            {src.date && `, ${src.date}`}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {wrecks.length > 0 && (
+          <section class="block">
+            <h2 class="small-h">Other dive sites in the park</h2>
+            <ul class="wrecks">
+              {wrecks.map((w) => {
+                const meta = [w.area, w.depth].filter(Boolean).join(' · ');
+                return (
+                  <li>
+                    {w.url ? (
+                      <a class="wreck has-page" href={w.url} target="_blank" rel="noopener">
+                        <span class="wreck-name">{w.name}</span>
+                        {meta && <span class="wreck-area">{meta}</span>}
+                        <span class="wreck-arrow" aria-hidden="true">
+                          ↗
+                        </span>
+                      </a>
+                    ) : (
+                      <span class="wreck">
+                        <span class="wreck-name">{w.name}</span>
+                        {meta && <span class="wreck-area">{meta}</span>}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {d.wrecksNote && <p class="src-meta">{d.wrecksNote}</p>}
+          </section>
+        )}
+      </div>
+
+      <aside class="side">
+        {d.role.length > 0 && (
+          <section class="panel lg lg-dark">
+            <h2 class="side-h">What I did</h2>
+            <ul class="checks">
+              {d.role.map((r) => (
+                <li>{r}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {d.organisations.length > 0 && (
+          <section class="panel lg lg-dark">
+            <h2 class="side-h">Who’s involved</h2>
+            <ul class="orgs">
+              {d.organisations.map((o) => (
+                <li>
+                  <span class="org-name">{o.name}</span>
+                  <span class="org-rel">{o.relationship}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+
+    {d.sources.length > 0 && (
+      <section class="block">
+        <h2 class="small-h">About the project</h2>
+        <ul class="sources">
+          {d.sources.map((src) => (
+            <li>
+              <a href={src.url} target="_blank" rel="noopener">
+                {src.title}
+              </a>
+              <span class="src-meta">
+                {src.publisher}
+                {src.date && `, ${src.date}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <p class="source-note">
+      {d.sourceNote ??
+        'Everything on this page has been published by the project or the press; follow the sources for their photographs and full reports. The research, and its findings, belong to the research team.'}
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .tone-mint {
+    --tone: 111 247 224;
+  }
+  .tone-amber {
+    --tone: 255 196 107;
+  }
+  .tone-violet {
+    --tone: 196 166 255;
+  }
+  .page {
+    display: grid;
+    gap: var(--space-8);
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 1rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  a {
+    color: rgb(var(--tone));
+    text-decoration: none;
+  }
+  .crumbs {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: calc(-1 * var(--space-5));
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: rgb(var(--tone));
+  }
+  .draft {
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.6rem;
+    color: #ffc46b;
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.4);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 50rem;
+  }
+  h1 {
+    font-size: var(--step-5);
+    line-height: 1;
+  }
+  .subtitle {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.15;
+    color: rgb(232 244 248 / 0.9);
+  }
+  .lede {
+    font-size: var(--step-0);
+    line-height: var(--leading-body);
+    color: rgb(232 244 248 / 0.84);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-7);
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-4);
+    border-left: 2px solid rgb(var(--tone));
+  }
+  .meta dt,
+  .site-facts dt {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .meta dd,
+  .site-facts dd {
+    margin: 2px 0 0;
+  }
+
+  .layout {
+    display: grid;
+    gap: var(--space-8);
+  }
+  @media (min-width: 980px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr) 22rem;
+      align-items: start;
+    }
+    .side {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+  .main {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .block {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+  h2 {
+    font-size: var(--step-3);
+    line-height: 1.05;
+  }
+  .small-h {
+    font-size: var(--step-2);
+  }
+  .prose :global(h2) {
+    margin-bottom: var(--space-2);
+  }
+  .prose :global(p) {
+    max-width: var(--measure);
+    color: rgb(232 244 248 / 0.86);
+  }
+  .prose :global(* + h2) {
+    margin-top: var(--space-7);
+  }
+
+  /* the sites: numbered cards, each with its facts and its sources */
+  .sites {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .site {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: 24px;
+    box-shadow: inset 0 2px 0 rgb(var(--tone) / 0.5);
+  }
+  .site-n {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: rgb(var(--tone));
+    padding-top: 0.5rem;
+  }
+  .site-body {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .site-name {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    line-height: 1.1;
+  }
+  .site-place {
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+  .site-aka {
+    display: block;
+    font-style: italic;
+  }
+  .site-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-3) 0;
+    border-block: 1px solid var(--glass-border);
+  }
+  .site-text {
+    color: rgb(232 244 248 / 0.86);
+  }
+  .sources {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+  }
+  .sources li {
+    display: grid;
+    gap: 1px;
+  }
+  .sources a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .sources a::after {
+    content: ' ↗';
+    font-size: 0.85em;
+  }
+  .src-meta {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+  }
+
+  .side {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: 22px;
+  }
+  .side-h {
+    font-size: var(--step-1);
+  }
+  .checks {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .checks li {
+    position: relative;
+    padding-left: 1.7rem;
+    font-size: var(--step--1);
+    color: rgb(232 244 248 / 0.9);
+  }
+  .checks li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.15em;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    background:
+      no-repeat center / 0.65rem
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%2304202e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+      rgb(var(--tone));
+  }
+  .orgs {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .orgs li {
+    display: grid;
+    gap: 2px;
+  }
+  .org-name {
+    font-size: var(--step--1);
+    font-weight: 500;
+  }
+  .org-rel {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+  }
+  /* names only: a compact two-column list */
+  .wrecks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: 0 var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .wrecks li {
+    border-top: 1px solid var(--glass-border);
+  }
+  .wreck {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1px var(--space-3);
+    padding-block: var(--space-3);
+    color: var(--ink);
+  }
+  .wreck-name,
+  .wreck-area {
+    grid-column: 1;
+  }
+  .wreck-arrow {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    color: rgb(var(--tone));
+  }
+  .has-page:hover .wreck-name {
+    color: rgb(var(--tone));
+  }
+  .wreck-name {
+    font-size: var(--step--1);
+  }
+  .wreck-area {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+  }
+  .source-note {
+    max-width: var(--measure);
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+  }
+</style>

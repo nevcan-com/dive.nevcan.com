@@ -68,5 +68,11 @@ Sources: google/fonts (pinned commit in `scripts/subset-fonts.py`), subset to La
 
 ## Logos
 
+- `public/media/gue-logo-dark.svg` (Education, course pages): the Global Underwater Explorers
+  logo, without motto, for dark backgrounds. Vector artwork taken unaltered from the GUE Brand
+  Standards Guide v2.0 (2026), p. 9 (`GUE/hub.gue.com.tr/PDFs/official-docs/GUE-Brandbook-v2.pdf`);
+  only the guide's grey backing square was removed. Trademark of GUE, used under the guide's
+  instructor licence (promoting Nev's GUE courses only; never on non-GUE training or projects).
+  Rules: even dark background, no shadow, clear space ≥ 1.3× its size, never altered.
 - `public/media/gue-tv-logo.webp` (footer): the GUE.tv logo, from gue.tv (its og:image), linking to
   Nev's GUE.tv referral link (`https://gue.tv/?via=nev`, Rewardful; marked as an affiliate link).

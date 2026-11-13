@@ -10,6 +10,8 @@ export interface UpcomingEvent {
   end?: string;
   location: string;
   kind: 'course' | 'trip';
+  /** the course's slug (src/content/courses/<slug>.md): the date then shows on that course's page */
+  course?: string;
   /** open: places available; few: last places; full: waiting list */
   status: 'open' | 'few' | 'full';
 }

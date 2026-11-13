@@ -1,0 +1,122 @@
+---
+/**
+ * A YouTube video that loads only when the visitor presses play. Until then the page shows a
+ * self-hosted poster (public/media/video/<id>.webp) and sends nothing to Google; on click the
+ * player loads from youtube-nocookie.com. Without JavaScript the poster links to YouTube.
+ */
+interface Props {
+  /** the YouTube video id */
+  id: string;
+  title: string;
+  /** e.g. "Footage: Fatih Albayrak" */
+  credit?: string;
+  caption?: string;
+}
+const { id, title, credit, caption } = Astro.props;
+const watch = `https://www.youtube.com/watch?v=${id}`;
+---
+
+<figure class="yt">
+  <div class="yt-frame">
+    <a
+      class="yt-poster"
+      href={watch}
+      target="_blank"
+      rel="noopener"
+      data-yt={id}
+      data-yt-title={title}
+      aria-label={`Play video: ${title}`}
+    >
+      <img src={`/media/video/${id}.webp`} alt="" width="1280" height="720" loading="lazy" />
+      <span class="yt-play" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28">
+          <path d="M8 5.5v13l11-6.5z" fill="currentColor"></path>
+        </svg>
+      </span>
+    </a>
+  </div>
+  <figcaption>
+    <span class="yt-title">{title}</span>
+    {caption && <span class="yt-meta">{caption}</span>}
+    {credit && <span class="yt-meta">{credit}</span>}
+    <span class="yt-meta">Plays from YouTube when you press play.</span>
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('a[data-yt]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${a.dataset.yt}?autoplay=1&rel=0`;
+      iframe.title = a.dataset.ytTitle ?? 'Video';
+      iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      // the frame keeps its size; only the poster inside it is swapped for the player
+      a.replaceWith(iframe);
+    });
+  });
+</script>
+
+<style>
+  .yt {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  .yt-frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 20px;
+    background: rgb(1 8 16);
+    box-shadow: inset 0 0 0 1px var(--glass-border);
+  }
+  .yt-poster,
+  .yt-frame img,
+  .yt-frame :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+  .yt-frame img {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  .yt-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: auto;
+    width: 4.25rem;
+    height: 4.25rem;
+    border-radius: 50%;
+    color: var(--ink-surface);
+    background: rgb(var(--tone, 111 247 224));
+    box-shadow: 0 8px 32px rgb(1 8 16 / 0.5);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  a.yt-poster:hover img {
+    transform: scale(1.02);
+  }
+  a.yt-poster:hover .yt-play,
+  a.yt-poster:focus-visible .yt-play {
+    transform: scale(1.08);
+  }
+  figcaption {
+    display: grid;
+    gap: 2px;
+  }
+  .yt-title {
+    font-size: var(--step--1);
+  }
+  .yt-meta {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+  }
+</style>

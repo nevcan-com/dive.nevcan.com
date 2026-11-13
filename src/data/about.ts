@@ -118,30 +118,10 @@ export const memberships = [
   { org: 'GUE', since: '2022' },
   { org: 'SSI', since: '2021' },
   { org: 'ProTec', since: '2015' },
-  { org: 'TSSF', since: '2011' },
+  { org: 'TSSF/CMAS', since: '2011' },
 ];
 
-/** for the Education detail page (not shown on /about) */
-export const teaches = {
-  languages: ['English', 'Turkish'],
-  classes: [
-    'Discover Diving',
-    'Scuba Diver',
-    'Open Water Diver',
-    'Advanced Open Water Diver',
-    'Master Diver',
-    'GUE Performance Diver',
-    'GUE Basic Fundamentals',
-    'GUE Technical Fundamentals',
-    'Doubles Primer',
-    'Drysuit Primer',
-    'Navigation Primer',
-    'Rescue Primer',
-    'Deep Primer',
-    'DPV Diver 1',
-    'Gas Blender',
-  ],
-};
+/* the classes Nev teaches (his GUE résumé) live in src/data/education.ts */
 
 /**
  * Nev's GUE instructor cards, newest first (GUE renews them every season). Images: the card's two

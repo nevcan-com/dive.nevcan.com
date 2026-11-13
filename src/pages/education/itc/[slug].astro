@@ -1,0 +1,292 @@
+---
+/**
+ * An instructor training course (/education/itc/<slug>), from `instructorCourses` in
+ * src/data/education.ts. Only what GUE publishes about instructor development, and Nev's role
+ * as Instructor Trainer; prerequisites, length and price come from Nev (not public on gue.com).
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import UpcomingEvents from '@/components/footer/UpcomingEvents.astro';
+import CourseCard from '@/components/education/CourseCard.astro';
+import { getCourseMap } from '@/components/education/courses';
+import { upcoming } from '@/data/events';
+import { instructorCourses, instructorPath, GUE_IT_IE, GUE_RESUME } from '@/data/education';
+
+export function getStaticPaths() {
+  return instructorCourses.map((itc) => ({ params: { slug: itc.slug }, props: { itc } }));
+}
+
+interface Props {
+  itc: (typeof instructorCourses)[number];
+}
+const { itc } = Astro.props;
+const course = (await getCourseMap()).get(itc.teaches);
+if (!course) throw new Error(`instructorCourses names a course that doesn't exist: ${itc.teaches}`);
+const dates = upcoming.filter((e) => e.title.startsWith(itc.match));
+const subject = encodeURIComponent(itc.name);
+---
+
+<BaseLayout
+  title={itc.name}
+  description={`Instructor training with Nevcan Uludaş, GUE Instructor Trainer. Leads to ${itc.rating}.`}
+  noindex={itc.draft}
+>
+  <article class="page">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/education">Education</a>
+      <span aria-hidden="true">/</span>
+      <a href="/education#pro">Become an instructor</a>
+    </nav>
+
+    <header class="head">
+      <p class="eyebrow">
+        Instructor training
+        {itc.draft && <span class="draft">Draft</span>}
+      </p>
+      <h1>{itc.name}</h1>
+      <p class="level">
+        <span class="k">Leads to</span>
+        {itc.rating}
+      </p>
+      <p class="lede">{itc.text}</p>
+    </header>
+
+    <div class="layout">
+      <div class="main">
+        <section class="block">
+          <h2>
+            <span class="eyebrow">The route</span>How GUE develops instructors
+          </h2>
+          <ul class="checks">
+            {instructorPath.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+          <p class="note">
+            Instructor Trainers and Evaluators are listed by course on{' '}
+            <a href={GUE_IT_IE} target="_blank" rel="noopener">
+              GUE’s website
+            </a>
+            ; my ratings are on my{' '}
+            <a href={GUE_RESUME} target="_blank" rel="noopener">
+              GUE instructor résumé
+            </a>
+            .
+          </p>
+        </section>
+
+        <section class="block">
+          <h2>
+            <span class="eyebrow">What you’ll teach</span>
+            {course.data.name}
+          </h2>
+          <p class="body">{course.data.summary}</p>
+          <ul class="next">
+            <li>
+              <CourseCard course={course} variant="row" />
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="side">
+        <section class="panel lg lg-dark">
+          <h2 class="side-h">Before you join</h2>
+          <p class="body">
+            GUE sets the requirements for instructor candidates. Write to me with your diving and
+            teaching background, and I’ll go through them with you.
+          </p>
+        </section>
+
+        <section class="panel lg lg-dark">
+          <h2 class="side-h">Price</h2>
+          <p class="body">Write and I’ll send you the details and a quote.</p>
+        </section>
+
+        <section class="panel lg lg-dark">
+          <UpcomingEvents events={dates} email="nev@gue.com" cta="email" />
+        </section>
+
+        <a class="btn" href={`mailto:nev@gue.com?subject=${subject}`}>
+          Ask about this ITC →
+        </a>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  /* instructor training: light blue, as on its card on /education */
+  .page {
+    --pro: 130 205 255;
+    display: grid;
+    gap: var(--space-8);
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 1rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  a {
+    color: rgb(var(--pro));
+    text-decoration: none;
+  }
+  p a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .crumbs {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: calc(-1 * var(--space-5));
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: rgb(var(--pro));
+  }
+  .draft {
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.6rem;
+    color: #ffc46b;
+    box-shadow: inset 0 0 0 1px rgb(255 196 107 / 0.4);
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 48rem;
+  }
+  h1 {
+    font-size: var(--step-5);
+    line-height: 1;
+  }
+  /* the instructor level: the line people look for */
+  .level {
+    padding-left: var(--space-4);
+    border-left: 2px solid rgb(var(--pro));
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+  .k {
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .lede {
+    font-size: var(--step-0);
+    line-height: var(--leading-body);
+    color: rgb(232 244 248 / 0.86);
+  }
+  .layout {
+    display: grid;
+    gap: var(--space-8);
+  }
+  @media (min-width: 980px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr) 22rem;
+      align-items: start;
+    }
+    .side {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+  .main {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .block {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+  h2 {
+    font-size: var(--step-3);
+    line-height: 1.05;
+  }
+  .body,
+  .note {
+    color: rgb(232 244 248 / 0.82);
+  }
+  .note {
+    font-size: var(--step--1);
+  }
+  .checks {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .checks li {
+    position: relative;
+    padding-left: 1.9rem;
+    font-size: var(--step-0);
+  }
+  .checks li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background:
+      no-repeat center / 0.7rem
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%2304202e' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+      rgb(var(--pro));
+  }
+  .next {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .side {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: 22px;
+  }
+  .side-h {
+    font-size: var(--step-1);
+  }
+  .btn {
+    margin-top: var(--space-2);
+    padding: 0.85rem 1.4rem;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    text-align: center;
+    color: var(--ink-surface);
+    background: rgb(var(--pro));
+  }
+  .btn:hover {
+    filter: brightness(1.08);
+  }
+</style>
