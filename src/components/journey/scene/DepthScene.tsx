@@ -75,8 +75,10 @@ export default function DepthScene({ onReady, onLost }: Props) {
       <DepthDriver onReady={onReady} />
       <Backdrop />
       <Particles count={compact ? 700 : 1800} />
-      <Shark />
-      <Jellyfish compact={compact} />
+      {/* the torch outro they belong to isn't shown on phones (Interlude.astro): neither are they,
+          and their models are never downloaded there */}
+      {!compact && <Shark />}
+      {!compact && <Jellyfish />}
     </Canvas>
   );
 }

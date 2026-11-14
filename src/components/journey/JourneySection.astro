@@ -23,7 +23,7 @@ const SliderWrap = slider ? 'div' : Fragment;
 // footage chapters: without WebGL, the clip's poster sits under a depth tint
 const fallbackBg =
   s.clip && !hero
-    ? `${bandGradient(s.depthStart, s.depthEnd, 4, s.natural ? 0.2 : 0.55)}, url(/media/${s.clip}.webp) center / cover no-repeat`
+    ? `${bandGradient(s.depthStart, s.depthEnd, 4, s.natural ? 0.2 : 0.55)}, url(/media/${s.clip}.webp) ${(s.focusX ?? 0.5) * 100}% center / cover no-repeat`
     : bandGradient(s.depthStart, s.depthEnd);
 ---
 
@@ -192,9 +192,14 @@ const fallbackBg =
     )}
 
     {s.cue && (
-      <p class="cue" aria-hidden="true">
-        <span>{s.cue}</span>
-        <span class="cue-line" />
+      <p class="cue" aria-hidden="true" title={s.cue}>
+        {/* three chevrons lighting up one after another, downwards (the old text and hairline
+            didn't read on the photo); the Education slider's arrow, turned to point down */}
+        {[0, 1, 2].map((i) => (
+          <svg class="cue-arrow" style={`--i:${i}`} viewBox="0 0 64 24" focusable="false">
+            <path d="M4 6l28 12L60 6" />
+          </svg>
+        ))}
       </p>
     )}
   </div>
@@ -299,9 +304,11 @@ const fallbackBg =
     inset: 0;
     z-index: 0;
     background: var(--band-bg);
+    transition: opacity 1.2s var(--ease-out);
   }
+  /* fades off the WebGL scene (already drawn underneath) instead of vanishing */
   :global(.scene-active) .band::before {
-    display: none;
+    opacity: 0;
   }
 
   /* legibility over footage comes from the text itself: a band-attached scrim would slide
@@ -464,42 +471,48 @@ const fallbackBg =
   .hero .cue {
     opacity: clamp(0, calc(1 - var(--breach, 0) * 8), 1);
   }
-  /* on the over-under photo the cue sits on bright water: dark ink reads there */
-  .hero:has(.hero-photo) .cue {
-    color: #05202e;
-  }
   .cue {
     position: absolute;
     left: 50%;
-    bottom: 5svh;
+    bottom: calc(4svh + 20px);
     translate: -50% 0;
+    margin: 0;
     display: grid;
     justify-items: center;
-    gap: var(--space-3);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: var(--tracking-caps);
-    text-transform: uppercase;
-    color: var(--ink);
+    gap: 0;
+    /* white with a soft dark halo: reads on the bright water of the photo and on deep blue */
+    color: #fff;
+    filter: drop-shadow(0 1px 2px rgb(1 20 30 / 0.55)) drop-shadow(0 0 8px rgb(1 20 30 / 0.3));
   }
-  .cue-line {
-    width: 1px;
-    height: 48px;
-    background: linear-gradient(currentColor, transparent);
-    transform-origin: top;
+  /* same drawing and stroke as .slider-btn svg (1.1rem × 3.5rem), turned on its side */
+  .cue-arrow {
+    width: 3.5rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.2;
+    /* the drawing has air above and below the chevron: pull the three closer together */
+    margin-block: -0.2rem;
     animation: cue 2.4s var(--ease-in-out) infinite;
+    animation-delay: calc(var(--i) * 0.3s);
   }
   @keyframes cue {
-    0% {
-      transform: scaleY(0);
+    0%,
+    100% {
+      opacity: 0.2;
     }
-    50% {
-      transform: scaleY(1);
+    30% {
       opacity: 1;
     }
-    100% {
-      transform: scaleY(1);
-      opacity: 0;
+  }
+  /* reduced motion: still arrows, fading downwards */
+  @media (prefers-reduced-motion: reduce) {
+    .cue-arrow {
+      animation: none;
+      opacity: calc(1 - var(--i) * 0.3);
     }
   }
 
@@ -750,16 +763,14 @@ const fallbackBg =
       grid-auto-columns: 86%;
       width: auto;
     }
+    /* phones: no arrow buttons, the cards are swiped with a finger */
     .slider-wrap {
-      grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+      grid-template-columns: minmax(0, 1fr);
       justify-content: stretch;
-      column-gap: var(--space-2);
-      margin-inline: calc(-1 * var(--space-2));
-      width: calc(100% + 2 * var(--space-2));
     }
-    .slider-btn svg {
-      width: 0.8rem;
-      height: 2.5rem;
+    .slider-btn,
+    .slider-btn[hidden] {
+      display: none;
     }
   }
 
@@ -977,15 +988,18 @@ const fallbackBg =
     background: var(--photo) center / cover no-repeat;
     /* it keeps panning while it fades (breach 0.5 → 1, i.e. 4 → 8 m); the first clip then
        fades in over the same distance, rising as it comes (Backdrop.tsx, SPAN.breach) */
-    background-position: 50%
+    background-position: var(--photo-x, 50%)
       calc((var(--photo-from) + var(--breach, 0) * (1 - var(--photo-from))) * 100%);
     opacity: clamp(0, calc((1 - var(--breach, 0)) * 2), 1);
   }
   /* portrait screens: 'cover' fits the photo to the screen's height exactly, leaving nothing to
-     pan through; a taller photo gives the descent room to move (photo is 1366 × 1600) */
-  @media (max-aspect-ratio: 1366/1600) {
+     pan through; a taller photo gives the descent room to move (photo is 1350 × 1600) */
+  @media (max-aspect-ratio: 1350/1600) {
     .hero-photo {
       background-size: auto 130%;
+      /* the photo is much wider than a phone here: Nev stands at 48% of its width, so 46.5%
+         puts him in the middle of a phone screen (50% would leave him ~15px left of centre) */
+      --photo-x: 46.5%;
     }
   }
   /* on the photo the title clears out before the faces scroll up under it */

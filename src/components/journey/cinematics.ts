@@ -9,7 +9,9 @@ import { sample } from './depth';
 /** Depth (m) consumed by each kind of transition, right before the chapter it leads into. */
 // breach: from the moment the waterline has passed (BREACH_END = 8) to About (12 m), so the
 // first clip arrives over the same distance the surface took to leave (4 m out, 4 m in)
-export const SPAN: Record<TransitionKind, number> = { breach: 4, card: 3, torch: 6 };
+// torch: from Community's end (92 m) its two lines hold at 0.36 and 0.82 of the outro
+// (Interlude.astro), so they read 100 m and 110 m on the depth rail
+export const SPAN: Record<TransitionKind, number> = { breach: 4, card: 3, torch: 22 };
 
 /** Depth at which the waterline has fully passed above the camera. */
 export const BREACH_END = 8;

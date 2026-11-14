@@ -199,22 +199,10 @@ const stops = [
     color: var(--ink-muted);
   }
 
+  /* phones: no depth rail. It was a thin strip on the edge whose labels can't show without
+     hover and whose ticks are too small to tap (Nev, 2026-11-14); the nav covers navigation */
   @media (max-width: 640px) {
     .rail {
-      --top: 4.75rem;
-      --bottom: var(--space-4);
-      --w: 8px;
-      right: 8px;
-    }
-    .needle {
-      right: calc(var(--w) / 2 - 12px);
-    }
-    .drop {
-      width: 24px;
-      height: 24px;
-    }
-    /* on phones the droplet's position is the readout; the number would sit on the text */
-    .readout {
       display: none;
     }
   }

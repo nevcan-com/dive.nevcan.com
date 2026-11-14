@@ -7,6 +7,7 @@
  */
 import { MAX_DEPTH } from './depth';
 import { cinematics } from './cinematics';
+import { arriveY, footerY } from './frame';
 
 declare global {
   interface Window {
@@ -31,12 +32,17 @@ export function startDepthTracker(root: HTMLElement) {
   let anchors: Anchor[] = [];
   let ticking = false;
   let last = -1;
+  /** page height at the last measure: it can change without any observed box resizing */
+  let measuredMax = -1;
 
   const measure = () => {
     const vh = window.innerHeight;
     const pinned = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const maxScroll = document.documentElement.scrollHeight - vh;
-    anchors = bands.map((el) => {
+    measuredMax = maxScroll;
+    // what isn't displayed (the torch outro on phones) has no place in the depth scale
+    const shown = bands.filter((el) => el.getClientRects().length > 0);
+    anchors = shown.map((el) => {
       const top = el.getBoundingClientRect().top + window.scrollY;
       // an interlude's depth runs exactly while its stage is pinned: from its top reaching the
       // top of the viewport until the band after it starts to enter at the bottom
@@ -50,15 +56,37 @@ export function startDepthTracker(root: HTMLElement) {
         id: el.dataset.chapter ?? el.id,
       };
     });
+    // a chapter reads its own depth where the page comes to rest on it (frame.ts): the depth
+    // holds from where the chapter starts until that resting point, then descends towards the
+    // next transition. So a click on "Education · 21 m" lands on 21 m.
+    for (let i = anchors.length - 1; i >= 0; i--) {
+      const el = shown[i]!;
+      if (!el.classList.contains('band') || el.classList.contains('hero')) continue;
+      const a = anchors[i]!;
+      const next = anchors[i + 1]?.y ?? Infinity;
+      const rest = Math.min(arriveY(el), maxScroll) + vh * 0.5;
+      if (rest > a.y + 1 && rest < next - 1) anchors.splice(i + 1, 0, { ...a, y: rest });
+    }
     // depth 0 at scroll 0; final depth when the page is fully scrolled
     if (anchors[0]) anchors[0].y = Math.max(anchors[0].y, vh * 0.5);
-    anchors.push({ y: maxScroll + vh * 0.5, depth: MAX_DEPTH, id: anchors.at(-1)?.id ?? '' });
+    // Contact reads 120 m where the page comes to rest on the footer (frame.ts): the bottom, or
+    // on phones, where the footer is taller than the screen, its social links below the nav
+    const prevY = anchors.at(-1)?.y ?? 0;
+    anchors.push({
+      y: Math.max(prevY + 1, Math.min(footerY(), maxScroll) + vh * 0.5),
+      depth: MAX_DEPTH,
+      id: anchors.at(-1)?.id ?? '',
+    });
     last = -1;
     update();
   };
 
   const update = () => {
     ticking = false;
+    if (Math.abs(html.scrollHeight - window.innerHeight - measuredMax) > 1) {
+      measure();
+      return;
+    }
     const probe = window.scrollY + window.innerHeight * 0.5;
     let depth = 0;
     let section = anchors[0]?.id ?? '';

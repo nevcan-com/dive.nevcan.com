@@ -219,12 +219,14 @@ const { heroPhoto, heroPhotoFrom, heroPhotoExit } = Astro.props;
   .journey {
     position: relative;
   }
+  /* the scene appears at once, underneath: the CSS atmosphere and the section backdrops above it
+     fade away instead (StaticFallback.astro, JourneySection.astro), so the hand-over is a
+     crossfade and the background behind the glass surfaces never drops out */
   .scene {
     position: fixed;
     inset: 0;
     z-index: var(--z-scene);
     opacity: 0;
-    transition: opacity 1.2s var(--ease-out);
   }
   :global(.scene-active) .scene {
     opacity: 1;
@@ -232,5 +234,11 @@ const { heroPhoto, heroPhotoFrom, heroPhotoExit } = Astro.props;
   /* no z-index here: section backdrops (z0), atmosphere (z1) and content (z2) share one stacking context */
   .sections {
     position: relative;
+  }
+  /* phones: the torch outro is left out (Interlude.astro), and its end marker with it */
+  @media (max-width: 760px) {
+    .outro-end {
+      display: none;
+    }
   }
 </style>

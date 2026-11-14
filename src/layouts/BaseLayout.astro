@@ -36,6 +36,10 @@ const s = t(locale);
     <meta name="theme-color" content="#01050a" />
     <script is:inline>
       document.documentElement.classList.add('js');
+      // liquid glass edge refraction (Chromium only, LiquidGlass.astro): decided before the first
+      // paint, so glass surfaces don't render once plain and then again refracted
+      if (navigator.userAgentData?.brands?.some((b) => /Chromium/i.test(b.brand)))
+        document.documentElement.classList.add('lg-refract');
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href={interVar} as="font" type="font/woff2" crossorigin />

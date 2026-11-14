@@ -76,8 +76,8 @@ export const fields: {
     tone: 'mint',
     projects: [
       {
-        name: 'Eastern Mediterranean Amphoras',
-        slug: 'eastern-mediterranean-amphoras',
+        name: 'Underwater Cultural Heritage Research',
+        slug: 'underwater-cultural-heritage-research',
         note: 'Adrasan, Kumluca and Fethiye, 2025',
       },
     ],

@@ -23,14 +23,16 @@ const fragmentShader = /* glsl */ `
   uniform vec2 uPointer;
   uniform sampler2D uVidA, uVidB;
   uniform float uGainA, uGainB, uBlendA, uBlendB, uAspectA, uAspectB, uWA, uWB, uSlideB, uSurface;
-  uniform float uNatA, uNatB;
+  uniform float uNatA, uNatB, uFocusA, uFocusB;
   ${noise}
   ${torch}
 
-  // cover-fit a clip into the frame, with slight overscan for pointer parallax
-  vec2 coverUv(vec2 uv, float va) {
+  // cover-fit a clip into the frame, with slight overscan for pointer parallax; when the frame
+  // is narrower than the clip, the crop slides toward its subject (focus: 0 left … 1 right)
+  vec2 coverUv(vec2 uv, float va, float focus) {
     vec2 s = uAspect > va ? vec2(1.0, va / uAspect) : vec2(uAspect / va, 1.0);
-    return (uv - 0.5) * s * 0.95 + 0.5 + uPointer * 0.01;
+    vec2 c = vec2(0.5 + (focus - 0.5) * (1.0 - s.x * 0.95), 0.5);
+    return (uv - 0.5) * s * 0.95 + c + uPointer * 0.01;
   }
 
   // depth grade: desaturate a touch, pull toward the water colour, lose light with depth.
@@ -87,10 +89,10 @@ const fragmentShader = /* glsl */ `
     // (weights come from JS, see clipWeights())
     float wA = uWA;
     float wB = uWB;
-    vec3 va = texture2D(uVidA, coverUv(ruv, uAspectA)).rgb;
+    vec3 va = texture2D(uVidA, coverUv(ruv, uAspectA, uFocusA)).rgb;
     // the first clip rises into place as it fades in, carrying on the surface photo's pan
     vec2 uvB = (ruv - 0.5) / (1.0 + uSlideB * 0.08) + 0.5 + vec2(0.0, uSlideB * 0.06);
-    vec3 vb = texture2D(uVidB, coverUv(uvB, uAspectB)).rgb;
+    vec3 vb = texture2D(uVidB, coverUv(uvB, uAspectB, uFocusB)).rgb;
     col = layer(col, va, uGainA * wA, uBlendA, beam, uNatA);
     col = layer(col, vb, uGainB * wB, uBlendB, beam, uNatB);
     float natural = max(uGainA * wA * uNatA, uGainB * wB * uNatB);
@@ -242,6 +244,8 @@ export function Backdrop() {
           uSurface: { value: 1 },
           uNatA: { value: 0 },
           uNatB: { value: 0 },
+          uFocusA: { value: 0.5 },
+          uFocusB: { value: 0.5 },
         },
       }),
     [empty],
@@ -290,6 +294,8 @@ export function Backdrop() {
     u.uBlendB!.value = seg.to ? BLEND[seg.to.blend ?? 'normal'] : 0;
     u.uAspectA!.value = a?.aspect ?? 16 / 9;
     u.uAspectB!.value = b?.aspect ?? 16 / 9;
+    u.uFocusA!.value = seg.from.focusX ?? 0.5;
+    u.uFocusB!.value = seg.to?.focusX ?? 0.5;
     const { wA, wB } = clipWeights(seg);
     u.uWA!.value = wA;
     u.uWB!.value = wB;

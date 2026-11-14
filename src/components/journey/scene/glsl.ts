@@ -21,7 +21,8 @@ export const noise = /* glsl */ `
 export const torch = /* glsl */ `
   float torchBeam(vec2 uv, float aspect, vec2 aim) {
     vec2 p = vec2(uv.x * aspect, uv.y);
-    vec2 origin = vec2(0.62 * aspect, -0.25);
+    // a third in from the left: the diver holds the torch in the left hand (Shark.tsx: same origin)
+    vec2 origin = vec2(0.33 * aspect, -0.25);
     // keep in sync with startPointer() in tracker.ts (CSS torch mask)
     vec2 target = vec2((0.5 + aim.x * 0.32) * aspect, 0.55 + aim.y * 0.28);
     vec2 dir = normalize(target - origin);

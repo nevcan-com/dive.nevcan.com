@@ -48,6 +48,9 @@ export interface JourneySection {
   natural?: boolean;
   /** the clip is a photograph (`/media/<clip>.webp`), shown still rather than as a video */
   still?: boolean;
+  /** where the clip's subject stands across the frame (0 left … 1 right, default 0.5): when the
+      screen is narrower than the clip (phones), the crop keeps this point in view */
+  focusX?: number;
   /** who shot the clip, shown vertically in the corner while it plays (the site's only public credit) */
   credit?: string;
   transition?: TransitionKind;
@@ -83,7 +86,7 @@ export const journey: JourneySection[] = [
     depthEnd: 21,
     eyebrow: 'About',
     title: 'An explorer who teaches',
-    lede: 'Diver, educator and explorer, with roots in underwater archaeology research and software development.',
+    lede: 'Diver, educator and explorer, with roots in citizen science and underwater archaeology research.',
     items: [
       { title: '2008', text: 'Started diving' },
       { title: '2011', text: 'Became a diving instructor' },
@@ -170,7 +173,12 @@ export const journey: JourneySection[] = [
     items: [
       { title: 'Cave', tone: 'violet', tags: ['KarstDive: Amanus', 'KarstDive: Western Taurus'] },
       { title: 'Wreck', tone: 'amber', tags: ['Gallipoli Wrecks'] },
-      { title: 'Archaeology', tone: 'mint', tags: ['Eastern Mediterranean Amphoras'] },
+      {
+        title: 'Archaeology',
+        tone: 'mint',
+        // 'Amphorae Typology Study': a placeholder Nev asked for (2026-11-14); he adds the details
+        tags: ['Underwater Cultural Heritage Research', 'Amphorae Typology Study'],
+      },
     ],
     cta: { label: 'See the expeditions', href: '/exploration' },
     align: 'end',
@@ -208,8 +216,9 @@ export const journey: JourneySection[] = [
     id: 'community',
     chapter: '06',
     depthStart: 90,
-    // then the torch outro ("Down here, daylight is gone"), then Contact at 120 m
-    depthEnd: 114,
+    // then the torch outro: its two lines hold at 100 m ("Down here, daylight is gone") and
+    // 110 m ("The only light is the one you carry"), see SPAN.torch; then Contact at 120 m
+    depthEnd: 92,
     eyebrow: 'Community',
     title: 'Nobody dives alone',
     lede: 'The wider GUE family,\nGUE Türkiye and the people I dive with.',
@@ -217,6 +226,8 @@ export const journey: JourneySection[] = [
     align: 'center',
     // Nevcan and his team in a wreck, torches on; once the lights go out it shows only in the beam
     clip: 'community-team',
+    // Nev is the diver on the right (~70% across): phones crop around him
+    focusX: 0.7,
     // shot for GUE, which holds the rights; the photographer (possibly Andrei Voinigescu) is
     // still to be confirmed, so the owner is credited until then
     credit: 'Photo: Global Underwater Explorers',

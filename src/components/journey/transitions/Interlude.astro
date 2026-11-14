@@ -68,6 +68,14 @@ const holds = kind === 'torch' ? '0.36,0.82' : undefined;
   .interlude-torch {
     height: 260svh;
   }
+  /* phones: no torch outro (100 m and 110 m); Community leads straight into the footer.
+     The depth tracker and the timed transitions skip what isn't displayed (tracker.ts,
+     autoplay.ts); the scene leaves out the shark and the jellyfish (DepthScene.tsx) */
+  @media (max-width: 760px) {
+    .interlude-torch {
+      display: none;
+    }
+  }
 
   .stage {
     position: sticky;

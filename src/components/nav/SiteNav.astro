@@ -29,17 +29,31 @@ const booking = navItems.find((n) => n.key === 'booking')!;
             </a>
           </li>
         ))}
-        <li class="menu-booking">
-          <a href={booking.href}>{s.nav.booking}</a>
-        </li>
-        <li class="menu-lang">
-          <LangSwitch variant="sheet" />
-        </li>
       </ul>
     </nav>
 
     <div class="bar-lang">
       <LangSwitch />
+    </div>
+
+    <!-- phones: a globe beside Booking opens the language choice (always in sight, and the globe
+         reads as "language" without knowing English) -->
+    <div class="globe-lang">
+      <button
+        class="globe"
+        type="button"
+        aria-expanded="false"
+        aria-controls="lang-pop"
+        aria-label={s.a11y.language}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z" />
+        </svg>
+      </button>
+      <div class="globe-pop lg lg-dark" id="lang-pop" hidden>
+        <LangSwitch variant="pop" />
+      </div>
     </div>
 
     <a class="book lg lg-tint lg-press" href={booking.href}>
@@ -66,6 +80,26 @@ const booking = navItems.find((n) => n.key === 'booking')!;
 </header>
 
 <script>
+  // phones: the globe's language popover (closes on a tap elsewhere or Escape)
+  const globe = document.querySelector<HTMLButtonElement>('.globe');
+  const pop = document.getElementById('lang-pop');
+  if (globe && pop) {
+    const show = (open: boolean) => {
+      globe.setAttribute('aria-expanded', String(open));
+      pop.hidden = !open;
+    };
+    globe.addEventListener('click', () => show(!!pop.hidden));
+    document.addEventListener('click', (e) => {
+      if (!pop.hidden && !(e.target as Element).closest('.globe-lang')) show(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !pop.hidden) {
+        show(false);
+        globe.focus();
+      }
+    });
+  }
+
   const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
   const menu = document.getElementById('site-menu');
   if (toggle && menu) {
@@ -242,11 +276,6 @@ const booking = navItems.find((n) => n.key === 'booking')!;
       width 420ms var(--ease-out),
       opacity var(--dur-fast) var(--ease-out);
   }
-  .menu-booking,
-  .menu-lang {
-    display: none;
-  }
-
   .book {
     padding: 10px 20px;
     border-radius: var(--radius-pill);
@@ -264,6 +293,49 @@ const booking = navItems.find((n) => n.key === 'booking')!;
   }
 
   .menu-toggle {
+    display: none;
+  }
+
+  .globe-lang {
+    display: none;
+    position: relative;
+  }
+  .globe {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    /* a plain icon, like a link: no glass circle around it (the tap area stays 42px) */
+    background: none;
+    color: inherit;
+    opacity: 0.85;
+    cursor: pointer;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .globe:hover,
+  .globe:focus-visible,
+  .globe[aria-expanded='true'] {
+    opacity: 1;
+  }
+  .globe svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+  .globe-pop {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    padding: 6px;
+    border-radius: 18px;
+    color: var(--ink);
+  }
+  .globe-pop[hidden] {
     display: none;
   }
 
@@ -305,9 +377,12 @@ const booking = navItems.find((n) => n.key === 'booking')!;
       height: 52px;
       padding: 0 5px 0 18px;
     }
-    /* phones keep Booking in reach: a smaller pill beside the menu button */
-    .book {
+    /* phones keep the language and Booking in reach, beside the menu button */
+    .globe-lang {
+      display: block;
       margin-left: auto;
+    }
+    .book {
       padding: 8px 15px;
       font-size: 0.8rem;
     }
@@ -403,15 +478,10 @@ const booking = navItems.find((n) => n.key === 'booking')!;
       letter-spacing: 0;
       opacity: 1;
     }
-    .menu-booking,
-    .menu-lang {
-      display: block;
-    }
+    /* (Booking and the language are not repeated in the menu: Booking's pill and the globe
+       stay in the bar beside the menu button) */
     .bar-lang {
       display: none;
-    }
-    .menu-booking a {
-      color: var(--bio);
     }
     .menu a[aria-current] {
       color: var(--bio);

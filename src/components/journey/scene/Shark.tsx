@@ -247,7 +247,7 @@ export function Shark() {
 
     // the torch: same origin and aim as the beam drawn in the backdrop shader
     const p = env.pointer;
-    along(lights.spot.position, 0.62, -0.25, 1.2);
+    along(lights.spot.position, 0.33, -0.25, 1.2);
     along(lights.spot.target.position, 0.5 + p.x * 0.32, 0.55 + p.y * 0.28, 9);
 
     const cam = camera as PerspectiveCamera;

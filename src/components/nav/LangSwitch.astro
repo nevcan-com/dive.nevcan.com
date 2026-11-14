@@ -7,8 +7,9 @@
 import { t, defaultLocale } from '@/i18n';
 
 interface Props {
-  /** bar: in the nav capsule; sheet: in the mobile menu; rail: its own capsule above the depth rail */
-  variant?: 'bar' | 'sheet' | 'rail';
+  /** bar: in the nav capsule; rail: its own capsule above the depth rail; pop: in the globe's
+      popover (phones, SiteNav) */
+  variant?: 'bar' | 'rail' | 'pop';
 }
 const { variant = 'bar' } = Astro.props;
 const s = t();
@@ -104,23 +105,9 @@ const current = defaultLocale;
     transform: none;
   }
 
-  .lang-sheet {
-    margin: var(--space-3) var(--space-4) var(--space-2);
-  }
-  .lang-sheet .opt {
+  .lang-pop .opt {
     font-size: 0.8rem;
     padding: 8px 14px;
-  }
-  .lang-sheet .soon-note {
-    top: 50%;
-    right: auto;
-    left: calc(100% + 10px);
-    transform: translate(-4px, -50%);
-  }
-  .lang-sheet .soon:hover ~ .soon-note,
-  .lang-sheet .soon:focus-visible ~ .soon-note,
-  .lang-sheet.show-soon .soon-note {
-    transform: translate(0, -50%);
   }
 
   /* its own little glass capsule above the depth rail, centred on the nav's height */

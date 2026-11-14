@@ -17,13 +17,15 @@ const credits = Object.fromEntries(journey.filter((c) => c.credit).map((c) => [c
   if (el) {
     const credits = JSON.parse(el.dataset.credits ?? '{}') as Record<string, string>;
     let shown = '';
+    // phones have no torch outro, so no shark to credit (DepthScene.tsx, Interlude.astro)
+    const phone = window.matchMedia('(max-width: 760px)');
     window.addEventListener('divedepth', (e) => {
       const { depth, section } = e.detail;
       // hidden while a transition plays, and once the lights go out for the outro:
       // the credit belongs to the clip on screen
       // the outro's shark is a CC BY model: credited for as long as it swims
       const text =
-        depth >= SHARK_FROM
+        depth >= SHARK_FROM && !phone.matches
           ? '3D shark: LasquetiSpice · CC BY 4.0'
           : segmentAt(depth).to || depth > OUTRO_START
             ? ''

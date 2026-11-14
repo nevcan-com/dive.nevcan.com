@@ -1,55 +1,106 @@
 ---
 /**
- * In-page links land with their chapter vertically centred (a chapter's content is centred in
- * its band, so centring the band centres the content, including its button).
- * Uses the band's box, which stays accurate even while content-visibility skips its contents.
+ * In-page links (nav, depth rail) travel to their chapter in one glide and stop where the
+ * chapter is framed (journey/frame.ts): centred if it fits, else just below the nav.
+ *
+ * The glide is driven here rather than by the browser's smooth scroll: chapters render lazily
+ * (content-visibility), so the layout shifts on the way and the target moves. Each frame
+ * re-measures the target and eases towards it, so the page lands once instead of overshooting
+ * and sliding back. While it travels, `window.__diveJumping` keeps the timed chapter
+ * transitions (autoplay.ts) out of the way.
  */
 ---
 
 <script>
+  import { arriveY, footerY } from '@/components/journey/frame';
+
   const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const maxY = () => document.documentElement.scrollHeight - innerHeight;
 
   function targetY(id: string): number | null {
     if (id === 'main' || id === 'surface') return 0;
     const el = document.getElementById(id);
     if (!el) return null;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    if (el.closest('footer')) return max;
-    const band = el.closest<HTMLElement>('.band') ?? el;
-    const r = band.getBoundingClientRect();
-    let y = scrollY + r.top + r.height / 2 - innerHeight / 2;
-    // content taller than the screen: start it just below the nav instead of centring it
-    const inner = band.querySelector<HTMLElement>('.band-inner');
-    const nav = document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 0;
-    if (inner && inner.offsetHeight > innerHeight - nav - 24) {
-      y = scrollY + inner.getBoundingClientRect().top - nav - 32;
+    if (el.closest('footer')) return footerY();
+    const band = el.closest<HTMLElement>('.band');
+    let y: number;
+    if (band) y = arriveY(band);
+    else {
+      // elsewhere on the site: centre the target
+      const r = el.getBoundingClientRect();
+      y = scrollY + r.top + r.height / 2 - innerHeight / 2;
     }
-    return Math.max(0, Math.min(max, y));
+    return Math.max(0, Math.min(maxY(), y));
   }
 
-  // Layout can still shift while we travel (chapters render lazily), and a smooth scroll can be
-  // interrupted, so when the scroll settles we re-aim and continue until we're there.
+  const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
   let journey = 0;
-  function go(id: string, smooth: boolean, attempt = 0) {
-    const y = targetY(id);
-    if (y === null) return false;
-    const behavior: ScrollBehavior = smooth && !reduced() ? 'smooth' : 'auto';
+
+  function go(id: string, smooth: boolean) {
+    if (targetY(id) === null) return false;
     const run = ++journey;
-    window.scrollTo({ top: y, behavior });
-    if (attempt < 4) {
-      const check = () => {
+    window.__diveJumping = true;
+    const done = () => {
+      if (run !== journey) return;
+      // one more frame so the last scroll event is seen while still jumping
+      requestAnimationFrame(() => {
+        if (run === journey) window.__diveJumping = false;
+      });
+    };
+
+    if (!smooth || reduced()) {
+      window.scrollTo({ top: targetY(id)!, behavior: 'instant' });
+      // lazy chapters may still settle: re-aim for a few frames
+      let n = 0;
+      const settle = () => {
         if (run !== journey) return;
-        const again = targetY(id);
-        if (again !== null && Math.abs(scrollY - again) > 6) go(id, smooth, attempt + 1);
+        const y = targetY(id);
+        if (y !== null && Math.abs(scrollY - y) > 1)
+          window.scrollTo({ top: y, behavior: 'instant' });
+        if (++n < 20) requestAnimationFrame(settle);
+        else done();
       };
-      if ('onscrollend' in window) window.addEventListener('scrollend', check, { once: true });
-      else setTimeout(check, 1400);
+      requestAnimationFrame(settle);
+      return true;
     }
+
+    const from = scrollY;
+    const dist = Math.abs(targetY(id)! - from);
+    // longer trips take a little longer, within reason
+    const duration = Math.min(1600, 500 + (dist / innerHeight) * 120);
+    const t0 = performance.now();
+    const step = (now: number) => {
+      if (run !== journey) return;
+      const to = targetY(id) ?? from;
+      const p = Math.min(1, (now - t0) / duration);
+      window.scrollTo({ top: from + (to - from) * easeInOut(p), behavior: 'instant' });
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        // after arriving, hold the target briefly in case the chapter is still rendering
+        let n = 0;
+        const hold = () => {
+          if (run !== journey) return;
+          const y = targetY(id);
+          if (y !== null && Math.abs(scrollY - y) > 1)
+            window.scrollTo({ top: y, behavior: 'instant' });
+          if (++n < 12) requestAnimationFrame(hold);
+          else done();
+        };
+        requestAnimationFrame(hold);
+      }
+    };
+    requestAnimationFrame(step);
     return true;
   }
-  // a manual scroll cancels any pending re-aim
-  window.addEventListener('wheel', () => journey++, { passive: true });
-  window.addEventListener('touchstart', () => journey++, { passive: true });
+
+  // a manual scroll cancels the glide
+  const cancel = () => {
+    if (!window.__diveJumping) return;
+    journey++;
+    window.__diveJumping = false;
+  };
+  window.addEventListener('wheel', cancel, { passive: true });
+  window.addEventListener('touchstart', cancel, { passive: true });
 
   document.addEventListener('click', (e) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
@@ -64,7 +115,7 @@
     }
   });
 
-  // deep links (/#education) also land centred
+  // deep links (/#education) land on their chapter too
   if (location.hash) {
     const id = decodeURIComponent(location.hash.slice(1));
     const land = () => requestAnimationFrame(() => go(id, false));

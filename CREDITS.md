@@ -26,8 +26,11 @@ public attribution (e.g. CC BY), it must be shown on the page where the asset is
 - `public/media/nev-portrait-*.webp` (About page portrait, from
   `source-media/nev-portrait_akin-bagcilar.jpg`): photograph by Akın Bağcılar
 - `public/media/surface-overunder.webp` (homepage hero): photograph by Julian Mühlenhaus,
-  retouched (the second diver and the two boats removed, cropped to centre Nev, the sky made
-  transparent so the drawn sky shows through)
+  cropped, colour-graded and retouched by Nev (2026-11-14; the second diver removed, the sky made
+  transparent so the drawn sky shows through). Source
+  `source-media/surface-overunder_julian-muhlenhaus.png` (Nev's third grade, final edit; its first
+  version: `…_grade3-earlier.png`; the earlier, more turquoise grade: `…_previous-grade.png`;
+  before the retouch: `…_uncleaned.png`)
   Photographs are shown as stills (never turned into video).
   Sources live in `source-media/` (not committed).
 
@@ -58,7 +61,14 @@ used on this site.)
 
 ## Jellyfish
 
-Procedural (`src/components/journey/scene/Jellyfish.tsx`). No model files.
+- `public/models/jellyfish.glb` (torch outro, `scene/Jellyfish.tsx`): rigged, animated jellyfish
+  model as used on peachweb.io. **No licence, author unknown.** Asked peachweb.io; they replied
+  (2026-11-14) that the model is not theirs and that they use it without a licence. Nev decided
+  to use it anyway and takes that risk (2026-11-14). No credit is shown, since there is no known
+  author to credit. Replace it if the author turns up or a licensed model is found. Recoloured in
+  code (blue/lilac glow, additive); the file itself is unaltered.
+- Until 2026-11-14 the jellyfish was procedural (drawn in code, no model file); that version is in
+  the git history of `scene/Jellyfish.tsx`.
 
 ## Fonts
 

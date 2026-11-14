@@ -17,6 +17,7 @@
  *   stage  the pinned interlude plays (out, hold, in)             data-duration
  *   settle the next chapter's content rises into place, easing out ~0.7 s
  */
+import { arriveFromBelowY, arriveY, footerY } from './frame';
 
 declare global {
   interface Window {
@@ -39,10 +40,15 @@ interface Key {
   y: number;
   t: number;
   ease: (x: number) => number;
+  /** re-measures the landing spot every frame: the next chapter renders lazily and can change
+      size on the way, which would otherwise leave the page off its resting point */
+  aim?: () => number;
 }
 
 const LEAD = 0.35;
 const SETTLE = 0.7;
+/** seconds for the glide from the last chapter to the footer where there is no outro (phones) */
+const FOOTER_GLIDE = 1.1;
 /** input stays blocked a moment after landing, so trackpad inertia can't start the next gate */
 const COOLDOWN = 350;
 /** longer after stopping on a hold, so the momentum of the scroll that started it dies out */
@@ -80,6 +86,11 @@ export function startAutoplay(root: HTMLElement) {
     };
   });
   const about = root.querySelector<HTMLElement>('#about');
+  const bands = root.querySelectorAll<HTMLElement>('.band');
+  const lastBand = bands[bands.length - 1] ?? null;
+  const footer = document.querySelector<HTMLElement>('[data-footer]');
+  /** is the outro into the footer on screen at all (it is left out on phones) */
+  const outroShown = () => gates.some((g) => g.next === footer && g.el.getClientRects().length > 0);
   if (!gates.length && !about) return;
 
   let busy = false;
@@ -91,17 +102,9 @@ export function startAutoplay(root: HTMLElement) {
   const absTop = (el: Element) => el.getBoundingClientRect().top + window.scrollY;
   const absBottom = (el: Element) => el.getBoundingClientRect().bottom + window.scrollY;
 
-  /** scroll position that frames a chapter's content: centred, or its top at 15% if taller */
-  const frameNext = (band: HTMLElement, vh: number) => {
-    const inner = band.querySelector('.band-inner') ?? band;
-    const r = inner.getBoundingClientRect();
-    return absTop(inner) - Math.max(vh * 0.15, (vh - r.height) / 2);
-  };
-  const framePrev = (band: HTMLElement, vh: number) => {
-    const inner = band.querySelector('.band-inner') ?? band;
-    const r = inner.getBoundingClientRect();
-    return absBottom(inner) - vh + Math.max(vh * 0.15, (vh - r.height) / 2);
-  };
+  /** scroll position that frames a chapter's content (frame.ts), the same spot links land on */
+  const frameNext = (band: HTMLElement) => arriveY(band);
+  const framePrev = (band: HTMLElement) => arriveFromBelowY(band);
 
   const play = (keys: Key[], cooldown = COOLDOWN) => {
     busy = true;
@@ -109,7 +112,19 @@ export function startAutoplay(root: HTMLElement) {
     html.classList.add('journey-autoplay');
     const t0 = performance.now();
     const total = keys.at(-1)!.t;
+    let settled = 0;
+    const finish = () => {
+      lastY = window.scrollY;
+      busy = false;
+      window.__diveAutoplay = false;
+      html.classList.remove('journey-autoplay');
+    };
     const step = (now: number) => {
+      // an in-page link took over: let it travel
+      if (window.__diveJumping) {
+        finish();
+        return;
+      }
       const t = Math.min(total, (now - t0) / 1000);
       let i = 1;
       while (i < keys.length - 1 && t > keys[i]!.t) i++;
@@ -117,15 +132,14 @@ export function startAutoplay(root: HTMLElement) {
       const b = keys[i]!;
       const span = b.t - a.t;
       const p = span > 0 ? b.ease((t - a.t) / span) : 1;
-      window.scrollTo({ top: a.y + (b.y - a.y) * p, behavior: 'instant' });
-      if (t < total) {
+      const by = b.aim ? Math.max(0, Math.min(html.scrollHeight - innerHeight, b.aim())) : b.y;
+      window.scrollTo({ top: a.y + (by - a.y) * p, behavior: 'instant' });
+      // past the end, keep the landing spot a few more frames while the chapter finishes rendering
+      if (t < total || (b.aim && ++settled < 12)) {
         requestAnimationFrame(step);
         return;
       }
-      lastY = window.scrollY;
-      busy = false;
-      window.__diveAutoplay = false;
-      html.classList.remove('journey-autoplay');
+      finish();
       blockUntil = performance.now() + cooldown;
     };
     requestAnimationFrame(step);
@@ -136,6 +150,10 @@ export function startAutoplay(root: HTMLElement) {
     const y = window.scrollY;
     const dir = Math.sign(y - lastY);
     lastY = y;
+    if (window.__diveJumping) {
+      bypassUntil = performance.now() + 300;
+      return;
+    }
     if (busy || !dir || performance.now() < bypassUntil) return;
     const vh = window.innerHeight;
     const maxY = html.scrollHeight - vh;
@@ -143,11 +161,16 @@ export function startAutoplay(root: HTMLElement) {
     // the opening: once the water has risen about half the screen, the page carries on by
     // itself to the About chapter; scrolling back up from About returns to the surface
     if (about) {
-      const aboutAt = Math.min(maxY, frameNext(about, vh));
+      const aboutAt = Math.min(maxY, frameNext(about));
       if (dir > 0 && y < aboutAt - 2 && (window.__diveDepth ?? 0) >= HERO_GO_DEPTH) {
         play([
           { y, t: 0, ease: linear },
-          { y: aboutAt, t: HERO_TO_ABOUT * ((aboutAt - y) / aboutAt) + 0.6, ease: easeInOut },
+          {
+            y: aboutAt,
+            t: HERO_TO_ABOUT * ((aboutAt - y) / aboutAt) + 0.6,
+            ease: easeInOut,
+            aim: () => frameNext(about),
+          },
         ]);
         return;
       }
@@ -162,6 +185,8 @@ export function startAutoplay(root: HTMLElement) {
     }
 
     for (const g of gates) {
+      // not displayed (the torch outro on phones): nothing to play
+      if (!g.el.getClientRects().length) continue;
       const top = absTop(g.el);
       const release = absBottom(g.el) - vh;
 
@@ -185,17 +210,28 @@ export function startAutoplay(root: HTMLElement) {
           play(keys, HOLD_COOLDOWN);
           return;
         }
-        // the footer is the end of the page: settle at the very bottom, so all of it shows
+        // the footer: settle at the very bottom, or on its social links if it is taller than
+        // the screen (frame.ts)
         const toFooter = g.next?.matches('[data-footer]');
         const end = toFooter
-          ? maxY
-          : Math.min(maxY, g.next ? Math.max(release, frameNext(g.next, vh)) : release);
+          ? Math.max(release, footerY())
+          : Math.min(maxY, g.next ? Math.max(release, frameNext(g.next)) : release);
         keys.push({
           y: release,
           t: (t += g.duration * ((release - at) / (release - top))),
           ease: linear,
         });
-        if (end > release + 1) keys.push({ y: end, t: (t += SETTLE), ease: easeOut });
+        const next = g.next;
+        if (end > release + 1)
+          keys.push({
+            y: end,
+            t: (t += SETTLE),
+            ease: easeOut,
+            aim:
+              next && !toFooter
+                ? () => Math.max(release, frameNext(next))
+                : () => Math.max(release, footerY()),
+          });
         play(keys);
         return;
       }
@@ -228,14 +264,55 @@ export function startAutoplay(root: HTMLElement) {
           play(keys, HOLD_COOLDOWN);
           return;
         }
-        const end = Math.max(0, g.prev ? Math.min(top, framePrev(g.prev, vh)) : top);
+        const end = Math.max(0, g.prev ? Math.min(top, framePrev(g.prev)) : top);
         keys.push({
           y: top,
           t: (t += g.duration * ((at - top) / (release - top))),
           ease: linear,
         });
-        if (end < top - 1) keys.push({ y: end, t: (t += SETTLE), ease: easeOut });
+        const prev = g.prev;
+        if (end < top - 1)
+          keys.push({
+            y: end,
+            t: (t += SETTLE),
+            ease: easeOut,
+            aim: prev ? () => Math.min(top, framePrev(prev)) : undefined,
+          });
         play(keys);
+        return;
+      }
+    }
+
+    // phones: no torch outro between the last chapter and the footer (Interlude.astro). The page
+    // still carries on to Contact by itself once the last chapter has scrolled away, and back
+    // up to it, as it does between chapters
+    if (lastBand && footer && !outroShown()) {
+      const rest = Math.min(maxY, footerY());
+      const lastAt = Math.max(0, Math.min(maxY, frameNext(lastBand)));
+      const lastInner = lastBand.querySelector('.band-inner') ?? lastBand;
+      if (dir > 0 && y < rest - 2 && y >= absBottom(lastInner) - vh * 0.25) {
+        play([
+          { y, t: 0, ease: linear },
+          {
+            y: rest,
+            t: FOOTER_GLIDE * Math.min(1, (rest - y) / vh) + 0.3,
+            ease: easeInOut,
+            aim: () => Math.min(html.scrollHeight - innerHeight, footerY()),
+          },
+        ]);
+        return;
+      }
+      const head = absTop(footer.querySelector('.social') ?? footer);
+      if (dir < 0 && y > lastAt + 2 && y < rest + 2 && head - y > vh * 0.5) {
+        play([
+          { y, t: 0, ease: linear },
+          {
+            y: lastAt,
+            t: FOOTER_GLIDE * Math.min(1, (y - lastAt) / vh) + 0.3,
+            ease: easeInOut,
+            aim: () => Math.max(0, frameNext(lastBand)),
+          },
+        ]);
         return;
       }
     }

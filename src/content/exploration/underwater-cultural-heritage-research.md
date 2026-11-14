@@ -1,8 +1,10 @@
 ---
-# Our own label for this work (Nev, 2026-11-13), not an official project name. Only facts the
-# press or the project has published; Nev's role in his own words. No coordinates, no unpublished
-# depths, finds or images (the research is ongoing and not Nev's to publish).
-title: Eastern Mediterranean Amphoras
+# Our own label for this work, not an official project name. Renamed from "Eastern Mediterranean
+# Amphoras" (Nev, 2026-11-14): amphoras are only part of the research, and it is the team's
+# project, which Nev supports. Only facts the press or the project has published; Nev's role in
+# his own words. No coordinates, no unpublished depths, finds or images (the research is ongoing
+# and not Nev's to publish).
+title: Underwater Cultural Heritage Research
 subtitle: Underwater archaeology on Türkiye’s Mediterranean coast, with Akdeniz University
 summary: Survey and excavation dives with Akdeniz University’s underwater archaeology team, led by Assoc. Prof. Dr. Hakan Öniz, on ancient shipwrecks off Antalya and Muğla. I take part as a volunteer project diver.
 date: 2025-01-01
