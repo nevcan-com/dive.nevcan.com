@@ -65,4 +65,10 @@ const credits = Object.fromEntries(journey.filter((c) => c.credit).map((c) => [c
   .clip-credit.is-on {
     opacity: 1;
   }
+  /* phones: the gutter is narrow, so the credit sits closer to the edge to keep clear of the copy */
+  @media (max-width: 760px) {
+    .clip-credit {
+      left: 2px;
+    }
+  }
 </style>

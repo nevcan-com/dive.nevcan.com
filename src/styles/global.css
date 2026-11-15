@@ -11,7 +11,9 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   color-scheme: dark;
-  background: var(--depth-120);
+  /* homepage: the water colour at the current depth (tracker.ts), so the CSS fallback never shows
+     black where no section paints; elsewhere the deep */
+  background: var(--water, var(--depth-120));
   /* keeps the layout still when the scrollbar is hidden during a transition */
   scrollbar-gutter: stable;
 }
@@ -29,7 +31,7 @@ body {
   font-size: var(--step-0);
   line-height: var(--leading-body);
   color: var(--ink);
-  background: var(--depth-120);
+  background: var(--water, var(--depth-120));
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
 }

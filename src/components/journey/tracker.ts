@@ -5,7 +5,7 @@
  * - CSS variables on <html>: --depth-m, --breach, --dark, --torch (see cinematics.ts)
  * - `html.above-water` while the waterline is still in frame
  */
-import { MAX_DEPTH } from './depth';
+import { MAX_DEPTH, sample } from './depth';
 import { cinematics } from './cinematics';
 import { arriveY, footerY } from './frame';
 
@@ -105,6 +105,9 @@ export function startDepthTracker(root: HTMLElement) {
     const c = cinematics(depth);
     const s = html.style;
     s.setProperty('--depth-m', depth.toFixed(2));
+    // the water colour at this depth: the page's base, so wherever no section paints (the
+    // transitions, the dissolving edges of footage posters) the CSS fallback shows water, not black
+    s.setProperty('--water', sample(depth).water);
     s.setProperty('--breach', c.breach.toFixed(3));
     s.setProperty('--dark', c.dark.toFixed(3));
     s.setProperty('--torch', c.torch.toFixed(3));
