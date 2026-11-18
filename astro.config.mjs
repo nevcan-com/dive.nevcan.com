@@ -40,6 +40,8 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/preview/') &&
         !/\/booking\/?$/.test(page) &&
+        // the rental page is a draft until Nev confirms the prices; drop this line then
+        !/\/rental\/?$/.test(page) &&
         !draftCourses.some((d) => new URL(page).pathname.replace(/\/$/, '') === d) &&
         // instructor training pages (src/data/education.ts) are drafts until Nev approves them;
         // drop this line then

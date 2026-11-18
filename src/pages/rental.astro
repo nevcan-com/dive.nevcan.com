@@ -1,0 +1,165 @@
+---
+/**
+ * Equipment rental prices, moved from nevcan.com/rental.html (v7). Draft until Nev confirms the
+ * prices are current: noindex and out of the sitemap (astro.config.mjs) until then.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const groups = [
+  {
+    title: 'Gear',
+    items: [
+      ['SUEX DPV', '€40 / day'],
+      ['Backplate & harness', '€10 / day'],
+      ['Halcyon wing', '€10 / day'],
+    ],
+  },
+  {
+    title: 'Rebreathers (air diluent)',
+    items: [
+      ['JJ-CCR', '€70 / day'],
+      ['SF2 CCR', '€70 / day'],
+      ['Poseidon CCR', '€70 / day'],
+      ['Sofnolime', '€20 / kg'],
+    ],
+  },
+  {
+    title: 'Doubles with gas (200 bar)',
+    items: [
+      ['Nitrox 32', '€30 / day'],
+      ['Trimix 21/35', '€300 / day'],
+      ['Trimix 18/45', '€350 / day'],
+      ['Trimix 15/55', '€400 / day'],
+      ['Trimix 12/65', '€450 / day'],
+      ['Trimix 10/90', '€550 / day'],
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Equipment rental"
+  description="Rental prices for DPVs, rebreathers, doubles and gas."
+  noindex
+>
+  <article class="page">
+    <header class="head">
+      <p class="eyebrow">Rental</p>
+      <h1>Equipment rental</h1>
+      <p class="lede">Daily prices for scooters, rebreathers and doubles filled with your gas.</p>
+    </header>
+
+    <div class="grid">
+      {groups.map((g) => (
+        <section class="panel lg lg-dark">
+          <h2>{g.title}</h2>
+          <table>
+            <tbody>
+              {g.items.map(([name, price]) => (
+                <tr>
+                  <th scope="row">{name}</th>
+                  <td>{price}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </div>
+
+    <div class="grid">
+      <section class="panel lg lg-dark">
+        <h2>Cylinders</h2>
+        <ul>
+          <li>Cylinders are handed over at 200 bar or more, at no extra charge above 200 bar.</li>
+          <li>They must not be refilled; the mix is checked when you collect them.</li>
+          <li>Return them with at least 30 bar, which keeps the cylinders healthy.</li>
+        </ul>
+      </section>
+      <section class="panel lg lg-dark">
+        <h2>Dive centres and my students</h2>
+        <ul>
+          <li>50% off rental.</li>
+          <li>30% off sofnolime and trimix.</li>
+          <li>Dive centres renting two or more DPVs get one more free for their group leader.</li>
+        </ul>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    display: grid;
+    gap: var(--space-8);
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: calc(var(--space-10) + 2rem) var(--gutter) var(--space-10);
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgb(8 57 94 / 0.55), transparent 70%);
+  }
+  @media (min-width: 900px) {
+    .page {
+      padding-right: calc(var(--gutter) + 5.5rem);
+    }
+  }
+  .head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 44rem;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--bio);
+  }
+  h1 {
+    font-size: var(--step-5);
+  }
+  .lede {
+    font-size: var(--step-1);
+    color: rgb(232 244 248 / 0.85);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: var(--space-5);
+    align-items: start;
+  }
+  .panel {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: 24px;
+  }
+  h2 {
+    font-size: var(--step-2);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid rgb(232 244 248 / 0.12);
+    font-weight: 400;
+    text-align: left;
+  }
+  td {
+    text-align: right;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+  tr:last-child th,
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  ul {
+    display: grid;
+    gap: var(--space-2);
+    padding-left: 1.1rem;
+    color: rgb(232 244 248 / 0.85);
+  }
+</style>
