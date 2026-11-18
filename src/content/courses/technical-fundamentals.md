@@ -47,6 +47,7 @@ gueUrl: https://gue.com/diver-training/explore-gue-courses/technical/technical-f
 standards: 3.2.1
 keywords:
   [fundamentals, fundies, tech fund, technical, cave, ccr, rebreather, gateway, doubles, nitrox]
+draft: false
 ---
 
 ## Why this course
